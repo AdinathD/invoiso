@@ -1,0 +1,337 @@
+import { useState, useMemo } from 'react';
+import { ShoppingBag } from 'lucide-react';
+import { MasterHeader } from './sidebar';
+import type { MasterForm } from './sidebar';
+import { AddProductForm } from './AddProductForm';
+import type { Product } from './AddProductForm';
+import { ProductListTable } from './ProductListTable';
+import type { TableItem } from './ProductListTable';
+import { SummaryFooter } from './SummaryFooter';
+
+// In-Memory Database for demonstration
+const SAMPLE_PRODUCTS: Product[] = [
+  { id: '1', name: 'DAAWAT RICE APPLE PREMIUM BASMATI [30 KG]', hsn: '10063092', priceWithGst: 85.00, gstPercent: 0, uom: 'KGS', stockLabel: 'BOX(1.10) PCS(22.00)', defaultWeight: 30.00 },
+  { id: '2', name: 'DAAWAT RICE BROWN JAR 1 KG', hsn: '10063010', priceWithGst: 170.00, gstPercent: 5, uom: 'PCS', stockLabel: 'BOX(4.00) PCS(48.00)', defaultWeight: 1.00 },
+  { id: '3', name: 'FORTUNE SOYABEAN OIL 1 LTR', hsn: '15079010', priceWithGst: 120.00, gstPercent: 5, uom: 'BTL', stockLabel: 'BOX(12.00) PCS(144.00)', defaultWeight: 0.91 },
+  { id: '4', name: 'AASHIRVAAD ATTA SHUDH CHAKKI [10 KG]', hsn: '11010000', priceWithGst: 450.00, gstPercent: 0, uom: 'BAG', stockLabel: 'BOX(0.00) PCS(15.00)', defaultWeight: 10.00 },
+  { id: '5', name: 'TATA SALT PRO VACUUM EVAPORATED [1 KG]', hsn: '25010021', priceWithGst: 28.00, gstPercent: 0, uom: 'PCS', stockLabel: 'BOX(2.00) PCS(50.00)', defaultWeight: 1.00 },
+  {id: '6', name: 'ashirwad SALT PRO VACUUM EVAPORATED [1 KG]', hsn: '25010022', priceWithGst: 28.00, gstPercent: 0, uom: 'PCS', stockLabel: 'BOX(2.00) PCS(50.00)', defaultWeight: 1.00  }];
+
+const INITIAL_FORM: MasterForm = {
+name: 'adi',
+  mobileNo: '20121222121',
+  remarks: 'Remarks',
+  invoiceNo: 'NHW-2627-0001',
+  invoiceDate: new Date().toISOString().split('T')[0],
+  balance: '0 DR',
+  pan: 'ABCDE1234F',
+  gst: '27ABCDE1234F1Z5',
+  gstType: 'CGST/SGST',
+  city: 'Mumbai',
+  state: 'Maharashtra',
+  country: 'India',
+  billTo: 'ABC General Stores'
+};
+
+export default function App() {
+  // Master form state
+  const [form, setForm] = useState<MasterForm>(INITIAL_FORM);
+
+  // Table items state
+  const [items, setItems] = useState<TableItem[]>([
+  
+  ]);
+   // {srNo: 1,
+      // id: '1',
+      // name: 'DAAWAT RICE APPLE PREMIUM BASMATI [30 KG]',
+      // hsn: '10063092',
+      // quantity: 12.00,
+      // uom: 'KGS',
+      // price: 85.00,
+      // netWt: 12.00,
+      // netRate: 85.00,
+      // rate: 85.00,
+      // gstPercent: 0,
+      // net: 1020.00}
+
+  // Active Item Entry Row input state
+  const [activeSearch, setActiveSearch] = useState('');
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+
+  const [activeQty, setActiveQty] = useState('0.00');
+  const [activeUOM, setActiveUOM] = useState('PCS');
+  const [activePrice, setActivePrice] = useState('0.00');
+  const [activeNetWt, setActiveNetWt] = useState('0.00');
+  const [activeGstPercent, setActiveGstPercent] = useState('0.00');
+
+  // Editing state for main table items
+  const [editingSrNo, setEditingSrNo] = useState<number | null>(null);
+
+  // Logistics form state
+  const [hamali, setHamali] = useState('0.00');
+  const [freight, setFreight] = useState('0.00');
+  const [discPercent, setDiscPercent] = useState('0.00');
+  const [salesman, setSalesman] = useState('-- Select --');
+  const [vehicleNo, setVehicleNo] = useState('');
+  const [transport, setTransport] = useState('');
+  const [creditBill, setCreditBill] = useState(false);
+  const [note, setNote] = useState('');
+  const [salesNotes, setSalesNotes] = useState('Enter sales notes here...');
+  const [roundOff, setRoundOff] = useState('0.00');
+
+  // Calculate Net Rate & Rate & Net dynamically for the active item row
+  const activeCalculated = useMemo(() => {
+    const qty = parseFloat(activeQty) || 0;
+    const priceWithGst = parseFloat(activePrice) || 0;
+    const gstPct = parseFloat(activeGstPercent) || 0;
+
+    // Rate = price divided by (1 + gstPercent/100)
+    const rate = priceWithGst / (1 + gstPct / 100);
+    const net = qty * priceWithGst;
+
+    return {
+      rate: rate.toFixed(2),
+      netRate: rate.toFixed(2),
+      net: net.toFixed(2)
+    };
+  }, [activeQty, activePrice, activeGstPercent]);
+
+  // Handlers for Select option choice
+  const handleSelectProduct = (product: Product) => {
+    setSelectedProduct(product);
+    setActiveSearch(product.name);
+    setShowDropdown(false);
+    setActivePrice(product.priceWithGst.toString());
+    setActiveGstPercent(product.gstPercent.toString());
+    setActiveUOM(product.uom);
+    setActiveQty('1.00');
+    // Calculate net wt based on qty and default weight
+    setActiveNetWt(product.defaultWeight.toString());
+  };
+
+  // Auto weight updater when Qty changes in entry row
+  const handleQtyChange = (val: string) => {
+    setActiveQty(val);
+    const numQty = parseFloat(val) || 0;
+    if (selectedProduct) {
+      setActiveNetWt((numQty * selectedProduct.defaultWeight).toFixed(2));
+    }
+  };
+
+  // Add Item handler
+  const handleAddItem = () => {
+    if (!activeSearch.trim()) return;
+
+    const newItem: TableItem = {
+      srNo: items.length + 1,
+      id: selectedProduct?.id || Math.random().toString(),
+      name: activeSearch,
+      hsn: selectedProduct?.hsn || '10000000',
+      quantity: parseFloat(activeQty) || 0,
+      uom: activeUOM,
+      price: parseFloat(activePrice) || 0,
+      netWt: parseFloat(activeNetWt) || 0,
+      rate: parseFloat(activeCalculated.rate) || 0,
+      netRate: parseFloat(activeCalculated.netRate) || 0,
+      gstPercent: parseFloat(activeGstPercent) || 0,
+      net: parseFloat(activeCalculated.net) || 0
+    };
+
+    setItems([...items, newItem]);
+
+    // Reset entry row
+    setActiveSearch('');
+    setSelectedProduct(null);
+    setActiveQty('0.00');
+    setActiveUOM('PCS');
+    setActivePrice('0.00');
+    setActiveNetWt('0.00');
+    setActiveGstPercent('0.00');
+  };
+
+  // Delete Item handler
+  const handleDeleteItem = (srNo: number) => {
+    const updated = items.filter(item => item.srNo !== srNo).map((item, idx) => ({
+      ...item,
+      srNo: idx + 1
+    }));
+    setItems(updated);
+  };
+
+  // Sum displays
+  const totals = useMemo(() => {
+    let quantitySum = 0;
+    let weightSum = 0;
+    let totalTaxable = 0;
+    let totalTax = 0;
+    let netTotalValue = 0;
+
+    items.forEach(item => {
+      quantitySum += item.quantity;
+      weightSum += item.netWt;
+
+      const itemNetVal = item.quantity * item.price;
+      netTotalValue += itemNetVal;
+
+      const lineTaxable = (item.rate * item.quantity);
+      totalTaxable += lineTaxable;
+      totalTax += (itemNetVal - lineTaxable);
+    });
+
+    const numHamali = parseFloat(hamali) || 0;
+    const numFreight = parseFloat(freight) || 0;
+    const numDiscPct = parseFloat(discPercent) || 0;
+    const numRound = parseFloat(roundOff) || 0;
+
+    const discountAmount = totalTaxable * (numDiscPct / 100);
+    const finalTaxable = totalTaxable - discountAmount + numHamali + numFreight;
+
+    const grossTotal = netTotalValue - (netTotalValue * (numDiscPct / 100)) + numHamali + numFreight;
+    const finalTotal = grossTotal + numRound;
+
+    return {
+      itemsCount: items.length,
+      weightSum: weightSum.toFixed(2),
+      quantitySum: quantitySum.toFixed(2),
+      taxableAmount: finalTaxable.toFixed(2),
+      taxAmount: totalTax.toFixed(2),
+      netTotal: finalTotal.toFixed(2)
+    };
+  }, [items, hamali, freight, discPercent, roundOff]);
+
+  const handleSaveInvoice = () => {
+    alert(`Invoice Saved Successfully!\n\nInvoice No: ${form.invoiceNo}\nTotal Items: ${totals.itemsCount}\nNet Total: INR ${totals.netTotal}`);
+
+    const match = form.invoiceNo.match(/^(.*-)(\d+)$/);
+    if (match) {
+      const prefix = match[1];
+      const nextNum = parseInt(match[2], 10) + 1;
+      const nextInvoiceNo = `${prefix}${String(nextNum).padStart(match[2].length, '0')}`;
+      setForm(prev => ({
+        ...prev,
+        invoiceNo: nextInvoiceNo,
+        invoiceDate: new Date().toISOString().split('T')[0]
+      }));
+    } else {
+      setForm(prev => ({
+        ...prev,
+        invoiceDate: new Date().toISOString().split('T')[0]
+      }));
+    }
+  };
+
+  const [darkMode, setDarkMode] = useState(false);
+
+  const toggleDarkMode = () => {
+    const nextMode = !darkMode;
+    setDarkMode(nextMode);
+    if (nextMode) {
+      document.documentElement.classList.add('dark');
+      document.body.classList.add('dark-mode');
+      document.body.style.backgroundColor = '#030712'; // gray-950
+    } else {
+      document.documentElement.classList.remove('dark');
+      document.body.classList.remove('dark-mode');
+      document.body.style.backgroundColor = '#f3f4f6'; // gray-100
+    }
+  };
+
+  return (
+    <div className={`w-full max-w-[1500px] mx-auto p-2 rounded shadow-sm box-border transition-colors duration-150 ${darkMode ? 'bg-gray-950 text-gray-100' : 'bg-white text-gray-900'}`}>
+      {/* App Nav Bar */}
+      <header className="flex justify-between items-center px-2 py-1 border-b border-gray-200 dark:border-gray-700 mb-1.5">
+        <div className="flex items-center gap-2">
+          <ShoppingBag size={16} className="text-emerald-500" />
+<span
+  className={`text-[14px] font-bold tracking-wide ${
+    darkMode ? 'text-white' : 'text-gray-700'
+  }`}
+>
+  Invoiso.ai
+</span>          <span className="text-[9px] bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400 px-1 py-0.5 rounded font-bold">cart creation</span>
+        </div>
+        <div className="flex items-center gap-3">
+          <span className="text-[10px] text-gray-500 dark:text-gray-400">Wholesale Credit Terminal</span>
+          <button
+            className="px-2 py-0.5 rounded text-[9.5px] font-semibold flex items-center gap-1 cursor-pointer transition-all border border-gray-300 dark:border-gray-600"
+            style={{
+              backgroundColor: darkMode ? '#f3f4f6' : '#1f2937',
+              color: darkMode ? '#1f2937' : '#f9fafb',
+            }}
+            onClick={toggleDarkMode}
+          >
+            {darkMode ? '☀️ Light Mode' : '🌙 Dark Mode'}
+          </button>
+          <button className="bg-emerald-500 hover:bg-emerald-600 text-white rounded text-[9.5px] font-semibold flex items-center justify-center transition-all h-5 px-2 cursor-pointer">
+            + New Wholesale
+          </button>
+        </div>
+      </header>
+
+      {/* CALLING MODULAR MASTER HEADER COMPONENT */}
+      <MasterHeader form={form} onChange={setForm} darkMode={darkMode} />
+
+      {/* CALLING MODULAR PRODUCTS LIST TABLE */}
+      <ProductListTable
+        items={items}
+        setItems={setItems}
+        editingSrNo={editingSrNo}
+        setEditingSrNo={setEditingSrNo}
+        handleDeleteItem={handleDeleteItem}
+        darkMode={darkMode}
+      />
+
+      {/* CALLING MODULAR ADD PRODUCT FORM COMPONENT */}
+      <AddProductForm
+        products={SAMPLE_PRODUCTS}
+        activeSearch={activeSearch}
+        setActiveSearch={setActiveSearch}
+        showDropdown={showDropdown}
+        setShowDropdown={setShowDropdown}
+        selectedProduct={selectedProduct}
+        handleSelectProduct={handleSelectProduct}
+        activeQty={activeQty}
+        handleQtyChange={handleQtyChange}
+        activeUOM={activeUOM}
+        setActiveUOM={setActiveUOM}
+        activePrice={activePrice}
+        setActivePrice={setActivePrice}
+        activeNetWt={activeNetWt}
+        setActiveNetWt={setActiveNetWt}
+        activeGstPercent={activeGstPercent}
+        setActiveGstPercent={setActiveGstPercent}
+        activeCalculated={activeCalculated}
+        handleAddItem={handleAddItem}
+        darkMode={darkMode}
+      />
+
+      {/* CALLING MODULAR SUMMARY FOOTER COMPONENT */}
+      <SummaryFooter
+        totals={totals}
+        hamali={hamali}
+        setHamali={setHamali}
+        freight={freight}
+        setFreight={setFreight}
+        discPercent={discPercent}
+        setDiscPercent={setDiscPercent}
+        salesman={salesman}
+        setSalesman={setSalesman}
+        vehicleNo={vehicleNo}
+        setVehicleNo={setVehicleNo}
+        transport={transport}
+        setTransport={setTransport}
+        creditBill={creditBill}
+        setCreditBill={setCreditBill}
+        note={note}
+        setNote={setNote}
+        salesNotes={salesNotes}
+        setSalesNotes={setSalesNotes}
+        roundOff={roundOff}
+        setRoundOff={setRoundOff}
+        handleSaveInvoice={handleSaveInvoice}
+        darkMode={darkMode}
+      />
+    </div>
+  );
+}
