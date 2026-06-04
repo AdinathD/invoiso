@@ -67,7 +67,7 @@ export const ProductListTable: React.FC<ProductListTableProps> = ({
 
   return (
     <div
-      className={`overflow-x-auto border rounded mb-2 transition-colors duration-150 ${
+      className={`overflow-auto border rounded mb-1.5 transition-colors duration-150 max-h-[60vh] ${
         darkMode
           ? 'border-gray-700 bg-gray-900'
           : 'border-gray-300 bg-white'

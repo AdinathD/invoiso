@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { ShoppingBag } from 'lucide-react';
-import { MasterHeader } from './sidebar';
+import { MasterHeader, InvoiceSidebar } from './sidebar';
 import type { MasterForm } from './sidebar';
 import { AddProductForm } from './AddProductForm';
 import type { Product } from './AddProductForm';
@@ -15,10 +15,10 @@ const SAMPLE_PRODUCTS: Product[] = [
   { id: '3', name: 'FORTUNE SOYABEAN OIL 1 LTR', hsn: '15079010', priceWithGst: 120.00, gstPercent: 5, uom: 'BTL', stockLabel: 'BOX(12.00) PCS(144.00)', defaultWeight: 0.91 },
   { id: '4', name: 'AASHIRVAAD ATTA SHUDH CHAKKI [10 KG]', hsn: '11010000', priceWithGst: 450.00, gstPercent: 0, uom: 'BAG', stockLabel: 'BOX(0.00) PCS(15.00)', defaultWeight: 10.00 },
   { id: '5', name: 'TATA SALT PRO VACUUM EVAPORATED [1 KG]', hsn: '25010021', priceWithGst: 28.00, gstPercent: 0, uom: 'PCS', stockLabel: 'BOX(2.00) PCS(50.00)', defaultWeight: 1.00 },
-  {id: '6', name: 'ashirwad SALT PRO VACUUM EVAPORATED [1 KG]', hsn: '25010022', priceWithGst: 28.00, gstPercent: 0, uom: 'PCS', stockLabel: 'BOX(2.00) PCS(50.00)', defaultWeight: 1.00  }];
+  { id: '6', name: 'ashirwad SALT PRO VACUUM EVAPORATED [1 KG]', hsn: '25010022', priceWithGst: 28.00, gstPercent: 0, uom: 'PCS', stockLabel: 'BOX(2.00) PCS(50.00)', defaultWeight: 1.00 }];
 
 const INITIAL_FORM: MasterForm = {
-name: 'adi',
+  name: 'adi',
   mobileNo: '20121222121',
   remarks: 'Remarks',
   invoiceNo: 'NHW-2627-0001',
@@ -36,23 +36,10 @@ name: 'adi',
 export default function App() {
   // Master form state
   const [form, setForm] = useState<MasterForm>(INITIAL_FORM);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // Table items state
-  const [items, setItems] = useState<TableItem[]>([
-  
-  ]);
-   // {srNo: 1,
-      // id: '1',
-      // name: 'DAAWAT RICE APPLE PREMIUM BASMATI [30 KG]',
-      // hsn: '10063092',
-      // quantity: 12.00,
-      // uom: 'KGS',
-      // price: 85.00,
-      // netWt: 12.00,
-      // netRate: 85.00,
-      // rate: 85.00,
-      // gstPercent: 0,
-      // net: 1020.00}
+  const [items, setItems] = useState<TableItem[]>([]);
 
   // Active Item Entry Row input state
   const [activeSearch, setActiveSearch] = useState('');
@@ -238,100 +225,127 @@ export default function App() {
   };
 
   return (
-    <div className={`w-full max-w-[1500px] mx-auto p-2 rounded shadow-sm box-border transition-colors duration-150 ${darkMode ? 'bg-gray-950 text-gray-100' : 'bg-white text-gray-900'}`}>
-      {/* App Nav Bar */}
-      <header className="flex justify-between items-center px-2 py-1 border-b border-gray-200 dark:border-gray-700 mb-1.5">
-        <div className="flex items-center gap-2">
-          <ShoppingBag size={16} className="text-emerald-500" />
-<span
-  className={`text-[14px] font-bold tracking-wide ${
-    darkMode ? 'text-white' : 'text-gray-700'
-  }`}
->
-  Invoiso.ai
-</span>          <span className="text-[9px] bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400 px-1 py-0.5 rounded font-bold">cart creation</span>
+    <div className={`flex w-full min-h-screen transition-colors duration-150 ${darkMode ? 'bg-gray-950 text-gray-100' : 'bg-gray-100 text-gray-900'}`}>
+
+      {/* CALLING MODULAR SIDEBAR COMPONENT */}
+      <InvoiceSidebar
+        form={form}
+        onChange={setForm}
+        darkMode={darkMode}
+        isOpen={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+      />
+
+      <div className={`flex-1 min-w-0 p-2.5 transition-all duration-300 ease-in-out max-w-[1500px] mx-auto h-screen flex flex-col overflow-hidden ${darkMode ? 'bg-gray-950' : 'bg-white'}`}>
+        {/* App Nav Bar */}
+        <header className="flex justify-between items-center px-2 py-1 border-b border-gray-200 dark:border-gray-700 mb-1.5 shrink-0">
+          <div className="flex items-center gap-2">
+            <ShoppingBag size={16} className="text-emerald-500" />
+            <span
+              className={`text-[14px] font-bold tracking-wide ${darkMode ? 'text-white' : 'text-gray-700'
+                }`}
+            >
+              Invoiso.ai
+            </span>
+            <span className="text-[9px] bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400 px-1 py-0.5 rounded font-bold">cart creation</span>
+          </div>
+          <div className="flex items-center gap-3">
+            <span className="text-[10px] text-gray-500 dark:text-gray-400">Wholesale Credit Terminal</span>
+            <button
+              className="px-2 py-0.5 rounded text-[9.5px] font-semibold flex items-center gap-1 cursor-pointer transition-all border border-gray-300 dark:border-gray-600"
+              style={{
+                backgroundColor: darkMode ? '#f3f4f6' : '#1f2937',
+                color: darkMode ? '#1f2937' : '#f9fafb',
+              }}
+              onClick={toggleDarkMode}
+            >
+              {darkMode ? '☀️ Light Mode' : '🌙 Dark Mode'}
+            </button>
+            <button className="bg-emerald-500 hover:bg-emerald-600 text-white rounded text-[9.5px] font-semibold flex items-center justify-center transition-all h-5 px-2 cursor-pointer">
+              + New Wholesale
+            </button>
+          </div>
+        </header>
+
+        {/* CALLING MODULAR MASTER HEADER COMPONENT */}
+        <div className="shrink-0">
+          <MasterHeader
+            form={form}
+            onChange={setForm}
+            darkMode={darkMode}
+            sidebarOpen={sidebarOpen}
+            onToggleSidebar={() => setSidebarOpen(true)}
+          />
         </div>
-        <div className="flex items-center gap-3">
-          <span className="text-[10px] text-gray-500 dark:text-gray-400">Wholesale Credit Terminal</span>
-          <button
-            className="px-2 py-0.5 rounded text-[9.5px] font-semibold flex items-center gap-1 cursor-pointer transition-all border border-gray-300 dark:border-gray-600"
-            style={{
-              backgroundColor: darkMode ? '#f3f4f6' : '#1f2937',
-              color: darkMode ? '#1f2937' : '#f9fafb',
-            }}
-            onClick={toggleDarkMode}
-          >
-            {darkMode ? '☀️ Light Mode' : '🌙 Dark Mode'}
-          </button>
-          <button className="bg-emerald-500 hover:bg-emerald-600 text-white rounded text-[9.5px] font-semibold flex items-center justify-center transition-all h-5 px-2 cursor-pointer">
-            + New Wholesale
-          </button>
+
+        {/* CALLING MODULAR PRODUCTS LIST TABLE */}
+        <div className="flex-1 min-h-0 overflow-auto mb-1.5">
+          <ProductListTable
+            items={items}
+            setItems={setItems}
+            editingSrNo={editingSrNo}
+            setEditingSrNo={setEditingSrNo}
+            handleDeleteItem={handleDeleteItem}
+            darkMode={darkMode}
+          />
         </div>
-      </header>
 
-      {/* CALLING MODULAR MASTER HEADER COMPONENT */}
-      <MasterHeader form={form} onChange={setForm} darkMode={darkMode} />
 
-      {/* CALLING MODULAR PRODUCTS LIST TABLE */}
-      <ProductListTable
-        items={items}
-        setItems={setItems}
-        editingSrNo={editingSrNo}
-        setEditingSrNo={setEditingSrNo}
-        handleDeleteItem={handleDeleteItem}
-        darkMode={darkMode}
-      />
+        {/* CALLING MODULAR ADD PRODUCT FORM COMPONENT */}
+        <div className="shrink-0">
+          <AddProductForm
+            products={SAMPLE_PRODUCTS}
+            activeSearch={activeSearch}
+            setActiveSearch={setActiveSearch}
+            showDropdown={showDropdown}
+            setShowDropdown={setShowDropdown}
+            selectedProduct={selectedProduct}
+            handleSelectProduct={handleSelectProduct}
+            activeQty={activeQty}
+            handleQtyChange={handleQtyChange}
+            activeUOM={activeUOM}
+            setActiveUOM={setActiveUOM}
+            activePrice={activePrice}
+            setActivePrice={setActivePrice}
+            activeNetWt={activeNetWt}
+            setActiveNetWt={setActiveNetWt}
+            activeGstPercent={activeGstPercent}
+            setActiveGstPercent={setActiveGstPercent}
+            activeCalculated={activeCalculated}
+            handleAddItem={handleAddItem}
+            darkMode={darkMode}
+          />
+        </div>
 
-      {/* CALLING MODULAR ADD PRODUCT FORM COMPONENT */}
-      <AddProductForm
-        products={SAMPLE_PRODUCTS}
-        activeSearch={activeSearch}
-        setActiveSearch={setActiveSearch}
-        showDropdown={showDropdown}
-        setShowDropdown={setShowDropdown}
-        selectedProduct={selectedProduct}
-        handleSelectProduct={handleSelectProduct}
-        activeQty={activeQty}
-        handleQtyChange={handleQtyChange}
-        activeUOM={activeUOM}
-        setActiveUOM={setActiveUOM}
-        activePrice={activePrice}
-        setActivePrice={setActivePrice}
-        activeNetWt={activeNetWt}
-        setActiveNetWt={setActiveNetWt}
-        activeGstPercent={activeGstPercent}
-        setActiveGstPercent={setActiveGstPercent}
-        activeCalculated={activeCalculated}
-        handleAddItem={handleAddItem}
-        darkMode={darkMode}
-      />
-
-      {/* CALLING MODULAR SUMMARY FOOTER COMPONENT */}
-      <SummaryFooter
-        totals={totals}
-        hamali={hamali}
-        setHamali={setHamali}
-        freight={freight}
-        setFreight={setFreight}
-        discPercent={discPercent}
-        setDiscPercent={setDiscPercent}
-        salesman={salesman}
-        setSalesman={setSalesman}
-        vehicleNo={vehicleNo}
-        setVehicleNo={setVehicleNo}
-        transport={transport}
-        setTransport={setTransport}
-        creditBill={creditBill}
-        setCreditBill={setCreditBill}
-        note={note}
-        setNote={setNote}
-        salesNotes={salesNotes}
-        setSalesNotes={setSalesNotes}
-        roundOff={roundOff}
-        setRoundOff={setRoundOff}
-        handleSaveInvoice={handleSaveInvoice}
-        darkMode={darkMode}
-      />
+        {/* CALLING MODULAR SUMMARY FOOTER COMPONENT */}
+        <div className="shrink-0">
+          <SummaryFooter
+            totals={totals}
+            hamali={hamali}
+            setHamali={setHamali}
+            freight={freight}
+            setFreight={setFreight}
+            discPercent={discPercent}
+            setDiscPercent={setDiscPercent}
+            salesman={salesman}
+            setSalesman={setSalesman}
+            vehicleNo={vehicleNo}
+            setVehicleNo={setVehicleNo}
+            transport={transport}
+            setTransport={setTransport}
+            creditBill={creditBill}
+            setCreditBill={setCreditBill}
+            note={note}
+            setNote={setNote}
+            salesNotes={salesNotes}
+            setSalesNotes={setSalesNotes}
+            roundOff={roundOff}
+            setRoundOff={setRoundOff}
+            handleSaveInvoice={handleSaveInvoice}
+            darkMode={darkMode}
+          />
+        </div>
+      </div>
     </div>
   );
 }
