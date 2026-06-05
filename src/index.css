@@ -1,8 +1,127 @@
 @import "tailwindcss";
 
+:root {
+  /* ==========================================
+     LIGHT MODE COLOR SYSTEM
+     Consolidated minimal gray palette
+     ========================================== */
+  
+  /* Background Colors */
+  --bg-app: #f9fafb;             /* Main body / page background (very light neutral gray) */
+  --bg-panel: #ffffff;           /* Cards, panels, sidebars, and containers (pure white) */
+  
+  /* Typography Colors */
+  --text-primary: #111827;       /* Main headings, primary content, and active text (dark charcoal) */
+  --text-secondary: #4b5563;     /* Sub-labels, helper text, and secondary copy (medium gray) */
+  --text-muted: #9ca3af;         /* Placeholder text, disabled labels, and subtle hints (light gray) */
+  
+  /* Border & Divider Colors */
+  --border-primary: #e5e7eb;     /* Soft dividers, table grid lines, and subtle separations (very light gray) */
+  --border-secondary: #d1d5db;   /* Standard border for buttons, active panels, and controls (light gray) */
+
+  /* Semantic Accent Colors (Emerald) */
+  --text-emerald: #059669;       /* Positive status values, success badges, and main accents */
+  --bg-emerald-light: #ecfdf5;   /* Background tint for success notifications and badges */
+  --border-emerald: #10b981;     /* Highlights for active selected states and positive borders */
+  --border-emerald-light: #a7f3d0;/* Subtle border tint for success elements */
+  
+  /* Input Form Elements (Reused from above to keep colors minimal) */
+  --input-bg: var(--bg-app);               /* Input boxes use the same light gray as app background */
+  --input-text: var(--text-primary);       /* Typing text matches primary body text */
+  --input-border: var(--border-secondary); /* Input borders map to secondary border gray */
+  --input-disabled-bg: var(--border-primary);/* Disabled inputs use the lighter border color */
+  --input-disabled-text: var(--text-muted);  /* Disabled input text matches muted text gray */
+
+  /* Font Sizes */
+  --text-xxs: 8px;
+  --text-xs: 9px;
+  --text-sm: 10px;
+  --text-base: 11px;
+  --text-md: 12px;
+  --text-lg: 14px;
+  --text-xl: 16px;
+  
+  /* Table Specific Sizes */
+  --text-table-header: 10px;
+  --text-table-body: 14px;
+}
+
+/* Dark Mode Color Combo */
+.dark, body.dark-mode, :root.dark {
+  /* ==========================================
+     DARK MODE COLOR SYSTEM
+     Consolidated minimal gray palette
+     ========================================== */
+
+  /* Background Colors */
+  --bg-app: #0b0f19;             /* Main dark page background (deep charcoal/black) */
+  --bg-panel: #111827;           /* Cards, panels, sidebars, and container backgrounds (dark slate gray) */
+
+  /* Typography Colors */
+  --text-primary: #f9fafb;       /* Main headings, primary content, and active text (off-white) */
+  --text-secondary: #d1d5db;     /* Sub-labels, helper text, and secondary copy (light gray) */
+  --text-muted: #6b7280;         /* Placeholder text, disabled labels, and subtle hints (medium gray) */
+
+  /* Border & Divider Colors */
+  --border-primary: #1f2937;     /* Soft dividers, table grid lines, and separations (dark border gray) */
+  --border-secondary: #374151;   /* Standard border for buttons, inputs, and dark panels (medium-dark border gray) */
+
+  /* Semantic Accent Colors (Emerald) */
+  --text-emerald: #34d399;       /* Accent/success colors tuned for dark background readability */
+  --bg-emerald-light: rgba(6, 78, 59, 0.4); /* Semi-transparent success tint */
+  --border-emerald: #10b981;     /* Highlights for active selected states */
+  --border-emerald-light: #064e3b;/* Subtle border tint for success elements */
+
+  /* Input Form Elements (Reused from above to keep colors minimal) */
+  --input-bg: var(--border-primary);       /* Input background matches dark primary border */
+  --input-text: var(--text-primary);       /* Typing text matches primary white text */
+  --input-border: var(--border-secondary); /* Input borders use medium-dark border gray */
+  --input-disabled-bg: var(--bg-panel);     /* Disabled inputs blend with the panel background */
+  --input-disabled-text: var(--text-muted);  /* Disabled input text matches muted gray */
+}
+
+/* Map CSS variables to Tailwind v4 Theme Configuration */
+@theme {
+  --color-app-bg: var(--bg-app);
+  --color-panel-bg: var(--bg-panel);
+  --color-text-main: var(--text-primary);
+  --color-text-sec: var(--text-secondary);
+  --color-text-mute: var(--text-muted);
+  --color-text-acc: var(--text-emerald);
+  --color-emerald-light: var(--bg-emerald-light);
+  --color-border-main: var(--border-primary);
+  --color-border-sec: var(--border-secondary);
+  --color-border-acc: var(--border-emerald);
+  --color-border-acc-light: var(--border-emerald-light);
+  
+  --color-inp-bg: var(--input-bg);
+  --color-inp-text: var(--input-text);
+  --color-inp-border: var(--input-border);
+  --color-inp-disabled-bg: var(--input-disabled-bg);
+  --color-inp-disabled-text: var(--input-disabled-text);
+
+  --text-app-xxs: var(--text-xxs);
+  --text-app-xs: var(--text-xs);
+  --text-app-sm: var(--text-sm);
+  --text-app-base: var(--text-base);
+  --text-app-md: var(--text-md);
+  --text-app-lg: var(--text-lg);
+  --text-app-xl: var(--text-xl);
+
+  --text-table-header: var(--text-table-header);
+  --text-table-body: var(--text-table-body);
+}
+
 @layer base {
   body {
-    @apply m-0 p-2 text-gray-800 text-[11px] leading-relaxed antialiased transition-colors duration-150;
+    background-color: var(--bg-app);
+    color: var(--text-primary);
+    font-size: var(--text-base);
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    margin: 0;
+    padding: 8px;
+    line-height: 1.625;
+    -webkit-font-smoothing: antialiased;
+    transition: background-color 150ms ease, color 150ms ease;
   }
 }

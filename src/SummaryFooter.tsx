@@ -59,177 +59,170 @@ export const SummaryFooter: React.FC<SummaryFooterProps> = ({
   darkMode,
 }) => {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-12 gap-2 border-t border-gray-300 dark:border-gray-700 pt-1 text-black dark:text-white">
-      {/* Left Logistics Block - Organized in 4 Columns */}
-      <div className="md:col-span-6 grid grid-cols-4 gap-x-1.5 gap-y-1">
-        <div className="flex flex-col">
-          <span className="text-[10px] font-bold" style={{ color: darkMode ? '#ffffff' : '#000000' }}>Items</span>
-          <input
-            type="text"
-            className={`border rounded px-1 py-0.2 text-[11.5px] h-6 w-16 text-center cursor-not-allowed ${darkMode ? 'border-gray-600 bg-gray-800 text-gray-300' : 'border-gray-400 bg-gray-100 text-black font-bold'}`}
-            value={totals.itemsCount}
-            disabled
-          />
-        </div>
-        <div className="flex flex-col">
-          <span className="text-[10px] font-bold" style={{ color: darkMode ? '#ffffff' : '#000000' }}>Weight</span>
-          <input
-            type="text"
-            className={`border rounded px-1 py-0.2 text-[11.5px] h-6 w-16 text-right cursor-not-allowed ${darkMode ? 'border-gray-600 bg-gray-800 text-gray-300' : 'border-gray-400 bg-gray-100 text-black font-bold'}`}
-            value={totals.weightSum}
-            disabled
-          />
-        </div>
-        <div className="flex flex-col">
-          <span className="text-[10px] font-bold" style={{ color: darkMode ? '#ffffff' : '#000000' }}>Quantity</span>
-          <input
-            type="text"
-            className={`border rounded px-1 py-0.2 text-[11.5px] h-6 w-16 text-right cursor-not-allowed ${darkMode ? 'border-gray-600 bg-gray-800 text-gray-300' : 'border-gray-400 bg-gray-100 text-black font-bold'}`}
-            value={totals.quantitySum}
-            disabled
-          />
-        </div>
-        <div className="flex flex-col">
-          <span className="text-[10px] font-bold" style={{ color: darkMode ? '#ffffff' : '#000000' }}>Disc(%)</span>
-          <input
-            type="number"
-            className={`border rounded px-1 py-0.2 text-[11.5px] h-6 w-16 text-right focus:outline-none ${darkMode ? 'border-gray-600 bg-gray-700 text-white' : 'border-gray-400 bg-white text-black font-bold'}`}
-            value={discPercent}
-            onChange={(e) => setDiscPercent(e.target.value)}
-          />
-        </div>
-
-        <div className="flex flex-col">
-          <span className="text-[10px] font-bold" style={{ color: darkMode ? '#ffffff' : '#000000' }}>Hamali(+)</span>
-          <input
-            type="number"
-            className={`border rounded px-1 py-0.2 text-[11.5px] h-6 w-16 text-right focus:outline-none ${darkMode ? 'border-gray-600 bg-gray-700 text-white' : 'border-gray-400 bg-white text-black font-bold'}`}
-            value={hamali}
-            onChange={(e) => setHamali(e.target.value)}
-          />
-        </div>
-        <div className="flex flex-col">
-          <span className="text-[10px] font-bold" style={{ color: darkMode ? '#ffffff' : '#000000' }}>Freight(+)</span>
-          <input
-            type="number"
-            className={`border rounded px-1 py-0.2 text-[11.5px] h-6 w-16 text-right focus:outline-none ${darkMode ? 'border-gray-600 bg-gray-700 text-white' : 'border-gray-400 bg-white text-black font-bold'}`}
-            value={freight}
-            onChange={(e) => setFreight(e.target.value)}
-          />
-        </div>
-        <div className="flex flex-col">
-          <span className="text-[10px] font-bold" style={{ color: darkMode ? '#ffffff' : '#000000' }}>Salesman</span>
-          <select
-            className={`border rounded px-1 py-0.2 text-[11.5px] h-6 w-full focus:outline-none ${darkMode ? 'border-gray-600 bg-gray-700 text-white' : 'border-gray-400 bg-white text-black font-bold'}`}
-            value={salesman}
-            onChange={(e) => setSalesman(e.target.value)}
-          >
-            <option>-- Select --</option>
-            <option>ABC </option>
-            <option>XYZ</option>
-          </select>
-        </div>
-        <div className="flex flex-col">
-          <span className="text-[10px] font-bold" style={{ color: darkMode ? '#ffffff' : '#000000' }}>Vehicle No</span>
-          <input
-            type="text"
-            className={`border rounded px-1 py-0.2 text-[11.5px] h-6 w-full focus:outline-none ${darkMode ? 'border-gray-600 bg-gray-700 text-white' : 'border-gray-400 bg-white text-black font-bold'}`}
-            value={vehicleNo}
-            onChange={(e) => setVehicleNo(e.target.value)}
-          />
+    <div className="grid grid-cols-1 md:grid-cols-12 gap-2 border-t border-border-main pt-1 text-text-main">
+      {/* Left Logistics Block */}
+      <div className="md:col-span-6 flex flex-col gap-2">
+        {/* Numeric and summary charge fields - compactly packed */}
+        <div className="flex flex-wrap items-center gap-2 pt-0.5">
+          <div className="flex flex-col">
+            <span className="text-app-sm font-bold text-text-main">Items</span>
+            <input
+              type="text"
+              className="border border-inp-border bg-inp-disabled-bg text-inp-disabled-text rounded px-1 py-0.2 text-app-base h-6 w-11 text-center cursor-not-allowed font-bold"
+              value={totals.itemsCount}
+              disabled
+            />
+          </div>
+          <div className="flex flex-col">
+            <span className="text-app-sm font-bold text-text-main">Weight</span>
+            <input
+              type="text"
+              className="border border-inp-border bg-inp-disabled-bg text-inp-disabled-text rounded px-1 py-0.2 text-app-base h-6 w-18 text-right cursor-not-allowed font-bold"
+              value={totals.weightSum}
+              disabled
+            />
+          </div>
+          <div className="flex flex-col">
+            <span className="text-app-sm font-bold text-text-main">Quantity</span>
+            <input
+              type="text"
+              className="border border-inp-border bg-inp-disabled-bg text-inp-disabled-text rounded px-1 py-0.2 text-app-base h-6 w-18 text-right cursor-not-allowed font-bold"
+              value={totals.quantitySum}
+              disabled
+            />
+          </div>
+          <div className="flex flex-col">
+            <span className="text-app-sm font-bold text-text-main">Disc(%)</span>
+            <input
+              type="number"
+              className="border border-inp-border bg-inp-bg text-inp-text rounded px-1 py-0.2 text-app-base h-6 w-14 text-right focus:outline-none font-bold"
+              value={discPercent}
+              onChange={(e) => setDiscPercent(e.target.value)}
+            />
+          </div>
+          <div className="flex flex-col">
+            <span className="text-app-sm font-bold text-text-main">Hamali(+)</span>
+            <input
+              type="number"
+              className="border border-inp-border bg-inp-bg text-inp-text rounded px-1 py-0.2 text-app-base h-6 w-18 text-right focus:outline-none font-bold"
+              value={hamali}
+              onChange={(e) => setHamali(e.target.value)}
+            />
+          </div>
+          <div className="flex flex-col">
+            <span className="text-app-sm font-bold text-text-main">Freight(+)</span>
+            <input
+              type="number"
+              className="border border-inp-border bg-inp-bg text-inp-text rounded px-1 py-0.2 text-app-base h-6 w-18 text-right focus:outline-none font-bold"
+              value={freight}
+              onChange={(e) => setFreight(e.target.value)}
+            />
+          </div>
+          <div className="flex items-center gap-1 mt-3.5 pl-1 col-span-1">
+            <input
+              type="checkbox"
+              id="creditBill"
+              checked={creditBill}
+              onChange={(e) => setCreditBill(e.target.checked)}
+            />
+            <label htmlFor="creditBill" className="text-app-sm font-bold cursor-pointer text-text-main">
+              Credit Bill
+            </label>
+          </div>
         </div>
 
-        <div className="flex flex-col">
-          <span className="text-[10px] font-bold" style={{ color: darkMode ? '#ffffff' : '#000000' }}>Transport</span>
-          <input
-            type="text"
-            className={`border rounded px-1 py-0.2 text-[11.5px] h-6 w-full focus:outline-none ${darkMode ? 'border-gray-600 bg-gray-700 text-white' : 'border-gray-400 bg-white text-black font-bold'}`}
-            value={transport}
-            onChange={(e) => setTransport(e.target.value)}
-          />
-        </div>
-        <div className="flex flex-col col-span-2">
-          <span className="text-[10px] font-bold" style={{ color: darkMode ? '#ffffff' : '#000000' }}>Note</span>
-          <input
-            type="text"
-            className={`border rounded px-1.5 py-0.2 text-[11.5px] h-6 w-full focus:outline-none ${darkMode ? 'border-gray-600 bg-gray-700 text-white' : 'border-gray-400 bg-white text-black font-bold placeholder-black font-semibold'}`}
-            value={note}
-            onChange={(e) => setNote(e.target.value)}
-            placeholder="Note text..."
-          />
-        </div>
-        <div className="flex items-center gap-1 mt-3.5 pl-1 col-span-1">
-          <input
-            type="checkbox"
-            id="creditBill"
-            checked={creditBill}
-            onChange={(e) => setCreditBill(e.target.checked)}
-          />
-          <label htmlFor="creditBill" className="text-[10px] font-bold cursor-pointer" style={{ color: darkMode ? '#ffffff' : '#000000' }}>
-            Credit Bill
-          </label>
+        {/* Larger operational fields - expanding to fill columns cleanly */}
+        <div className="grid grid-cols-12 gap-1.5">
+          <div className="flex flex-col col-span-12 sm:col-span-3">
+            <span className="text-app-sm font-bold text-text-main">Salesman</span>
+            <select
+              className="border border-inp-border bg-inp-bg text-inp-text rounded px-1.5 py-0.2 text-app-base h-6 w-full focus:outline-none font-bold focus:border-border-acc cursor-pointer"
+              value={salesman}
+              onChange={(e) => setSalesman(e.target.value)}
+            >
+              <option>-- Select --</option>
+              <option>ABC </option>
+              <option>XYZ</option>
+            </select>
+          </div>
+          <div className="flex flex-col col-span-12 sm:col-span-3">
+            <span className="text-app-sm font-bold text-text-main">Vehicle No</span>
+            <input
+              type="text"
+              className="border border-inp-border bg-inp-bg text-inp-text rounded px-1.5 py-0.2 text-app-base h-6 w-full focus:outline-none font-bold focus:border-border-acc"
+              value={vehicleNo}
+              onChange={(e) => setVehicleNo(e.target.value)}
+            />
+          </div>
+          <div className="flex flex-col col-span-12 sm:col-span-3">
+            <span className="text-app-sm font-bold text-text-main">Transport</span>
+            <input
+              type="text"
+              className="border border-inp-border bg-inp-bg text-inp-text rounded px-1.5 py-0.2 text-app-base h-6 w-full focus:outline-none font-bold focus:border-border-acc"
+              value={transport}
+              onChange={(e) => setTransport(e.target.value)}
+            />
+          </div>
+          <div className="flex flex-col col-span-12 sm:col-span-3">
+            <span className="text-app-sm font-bold text-text-main">Note</span>
+            <input
+              type="text"
+              className="border border-inp-border bg-inp-bg text-inp-text rounded px-1.5 py-0.2 text-app-base h-6 w-full focus:outline-none font-semibold placeholder-text-mute focus:border-border-acc"
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              placeholder="Note text..."
+            />
+          </div>
         </div>
       </div>
 
-      {/* Center Block (Sales Notes) - Replaced textarea with tight input */}
+      {/* Center Block (Sales Notes) */}
       <div className="md:col-span-3 flex flex-col">
-        <span className="text-[10px] font-bold" style={{ color: darkMode ? '#ffffff' : '#000000' }}>Sales Notes</span>
+        <span className="text-app-sm font-bold text-text-main">Sales Notes</span>
         <input
           type="text"
-          className={`border rounded px-1.5 py-0.2 text-[11.5px] h-6 w-full focus:outline-none ${darkMode ? 'border-gray-600 bg-gray-900 text-white' : 'border-gray-400 bg-white text-black font-bold'}`}
+          className="border border-inp-border bg-inp-bg text-inp-text rounded px-1.5 py-0.2 text-app-base h-6 w-full focus:outline-none font-bold"
           value={salesNotes}
           onChange={(e) => setSalesNotes(e.target.value)}
           placeholder="Sales notes..."
         />
       </div>
 
-      {/* Right Calculations Card - Elevated & Highlighted - Tighter calculations, Larger Net Total */}
-      <div className={`md:col-span-3 border border-emerald-500/20 rounded p-1.5 flex flex-col gap-0.5 transition-all duration-300 hover:shadow-sm ${
-        darkMode 
-          ? 'bg-gradient-to-b from-gray-900 to-gray-950 shadow-[0_2px_8px_-4px_rgba(16,185,129,0.15)] text-gray-150' 
-          : 'bg-gradient-to-b from-emerald-50/20 to-white shadow-[0_2px_6px_-3px_rgba(16,185,129,0.08)] text-gray-900'
-      }`}>
-        {/* Header Title inside card */}
-        <div className="border-b border-gray-200 dark:border-gray-800 pb-0.2 flex items-center justify-between">
-          <span className="text-[8px] font-extrabold tracking-wider text-emerald-600 dark:text-emerald-400 uppercase">Financial Summary</span>
+      {/* Right Calculations Card - Elevated & Highlighted */}
+      <div className="md:col-span-3 border border-border-acc/20 rounded p-1 flex flex-col gap-1.5 bg-panel-bg text-text-main justify-between h-full">
+        {/* Row 1: Taxable and Tax (GST) side by side */}
+        <div className="flex justify-between items-center text-app-xxs font-medium text-text-sec px-0.5">
+          <div className="flex gap-1">
+            <span>Taxable:</span>
+            <span className="font-semibold text-text-main">INR {totals.taxableAmount}</span>
+          </div>
+          <div className="flex gap-1">
+            <span>Tax (GST):</span>
+            <span className="font-semibold text-text-main">INR {totals.taxAmount}</span>
+          </div>
         </div>
 
-        {/* Small Tighter rows */}
-        <div className="flex justify-between items-center text-[9px] font-medium text-gray-500 dark:text-gray-400">
-          <span>Taxable:</span>
-          <span className="font-semibold text-gray-750 dark:text-gray-300">INR {totals.taxableAmount}</span>
-        </div>
-        
-        <div className="flex justify-between items-center text-[9px] font-medium text-gray-500 dark:text-gray-400">
-          <span>Tax (GST):</span>
-          <span className="font-semibold text-gray-750 dark:text-gray-300">INR {totals.taxAmount}</span>
-        </div>
-        
-        <div className="flex justify-between items-center text-[9px] font-medium text-gray-500 dark:text-gray-400">
-          <span>Round off:</span>
-          <input
-            type="number"
-            step="0.01"
-            className={`border rounded px-1 text-[9px] h-4 w-10 text-right focus:outline-none focus:ring-1 focus:ring-emerald-500 ${
-              darkMode ? 'border-gray-700 bg-gray-800 text-white' : 'border-gray-300 bg-white text-black font-bold'
-            }`}
-            value={roundOff}
-            onChange={(e) => setRoundOff(e.target.value)}
-          />
+        {/* Row 2: Round off and Net Total side by side */}
+        <div className="flex justify-between items-center border-t border-dashed border-border-sec pt-1 px-0.5">
+          <div className="flex items-center gap-1 text-app-xxs font-medium text-text-sec">
+            <span>Round off:</span>
+            <input
+              type="number"
+              step="0.01"
+              className="border border-inp-border bg-inp-bg text-inp-text rounded px-0.5 text-app-xxs h-3.5 w-9 text-right focus:outline-none focus:ring-1 focus:ring-border-acc font-bold"
+              value={roundOff}
+              onChange={(e) => setRoundOff(e.target.value)}
+            />
+          </div>
+          <div className="flex items-center gap-1 text-app-xxs font-bold text-text-sec">
+            <span className="uppercase tracking-wide">Net:</span>
+            <span className="text-[18px] font-black text-text-acc">INR {totals.netTotal}</span>
+          </div>
         </div>
 
-        {/* Prominent Net Total Section */}
-        <div className="flex justify-between items-center border-t border-dashed border-gray-200 dark:border-gray-800 pt-0.5">
-          <span className="text-[9px] font-bold text-gray-700 dark:text-gray-350 uppercase tracking-wide">
-             Net Total:
-          </span>
-          <span className="text-[15px] font-black text-emerald-600 dark:text-emerald-450">
-            INR {totals.netTotal}
-          </span>
-        </div>
-
+        {/* Row 3: Action Button */}
         <button
-          className="w-full bg-emerald-500 hover:bg-emerald-600 active:scale-[0.98] text-white rounded text-[9.5px] font-bold py-0.5 mt-0.5 transition-all cursor-pointer shadow-sm"
+          className="w-full bg-border-acc hover:bg-emerald-600 active:scale-[0.98] text-white rounded text-app-base font-bold py-0.5 transition-all cursor-pointer shadow-sm"
           onClick={handleSaveInvoice}
         >
           🖨️ Save & Print Invoice

@@ -216,16 +216,14 @@ export default function App() {
     if (nextMode) {
       document.documentElement.classList.add('dark');
       document.body.classList.add('dark-mode');
-      document.body.style.backgroundColor = '#030712'; // gray-950
     } else {
       document.documentElement.classList.remove('dark');
       document.body.classList.remove('dark-mode');
-      document.body.style.backgroundColor = '#f3f4f6'; // gray-100
     }
   };
 
   return (
-    <div className={`flex w-full min-h-screen transition-colors duration-150 ${darkMode ? 'bg-gray-950 text-gray-100' : 'bg-gray-100 text-gray-900'}`}>
+    <div className="flex w-full min-h-screen transition-colors duration-150 bg-app-bg text-text-main">
 
       {/* CALLING MODULAR SIDEBAR COMPONENT */}
       <InvoiceSidebar
@@ -236,32 +234,25 @@ export default function App() {
         onClose={() => setSidebarOpen(false)}
       />
 
-      <div className={`flex-1 min-w-0 p-2.5 transition-all duration-300 ease-in-out max-w-[1500px] mx-auto h-screen flex flex-col overflow-hidden ${darkMode ? 'bg-gray-950' : 'bg-white'}`}>
+      <div className="flex-1 min-w-0 p-2.5 transition-all duration-300 ease-in-out max-w-[1500px] mx-auto h-screen flex flex-col overflow-hidden bg-panel-bg">
         {/* App Nav Bar */}
-        <header className="flex justify-between items-center px-2 py-1 border-b border-gray-200 dark:border-gray-700 mb-1.5 shrink-0">
+        <header className="flex justify-between items-center px-2 py-1 border-b border-border-sec mb-1.5 shrink-0">
           <div className="flex items-center gap-2">
-            <ShoppingBag size={16} className="text-emerald-500" />
-            <span
-              className={`text-[14px] font-bold tracking-wide ${darkMode ? 'text-white' : 'text-gray-700'
-                }`}
-            >
+            <ShoppingBag size={16} className="text-text-acc" />
+            <span className="text-app-lg font-bold tracking-wide text-text-main">
               Invoiso.ai
             </span>
-            <span className="text-[9px] bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400 px-1 py-0.5 rounded font-bold">cart creation</span>
+            <span className="text-app-xs bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400 px-1 py-0.5 rounded font-bold">cart creation</span>
           </div>
           <div className="flex items-center gap-3">
-            <span className="text-[10px] text-gray-500 dark:text-gray-400">Wholesale Credit Terminal</span>
+            <span className="text-app-sm text-text-mute">Wholesale Credit Terminal</span>
             <button
-              className="px-2 py-0.5 rounded text-[9.5px] font-semibold flex items-center gap-1 cursor-pointer transition-all border border-gray-300 dark:border-gray-600"
-              style={{
-                backgroundColor: darkMode ? '#f3f4f6' : '#1f2937',
-                color: darkMode ? '#1f2937' : '#f9fafb',
-              }}
+              className="px-2 py-0.5 rounded text-app-base font-semibold flex items-center gap-1 cursor-pointer transition-all border border-border-sec bg-text-main text-panel-bg"
               onClick={toggleDarkMode}
             >
               {darkMode ? '☀️ Light Mode' : '🌙 Dark Mode'}
             </button>
-            <button className="bg-emerald-500 hover:bg-emerald-600 text-white rounded text-[9.5px] font-semibold flex items-center justify-center transition-all h-5 px-2 cursor-pointer">
+            <button className="bg-border-acc hover:bg-emerald-600 text-white rounded text-app-base font-semibold flex items-center justify-center transition-all h-5 px-2 cursor-pointer">
               + New Wholesale
             </button>
           </div>
@@ -279,7 +270,7 @@ export default function App() {
         </div>
 
         {/* CALLING MODULAR PRODUCTS LIST TABLE */}
-        <div className="flex-1 min-h-0 overflow-auto mb-1.5">
+        <div className="flex-1 min-h-0 overflow-hidden mb-1.5">
           <ProductListTable
             items={items}
             setItems={setItems}
