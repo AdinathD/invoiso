@@ -15,7 +15,7 @@ const SAMPLE_PRODUCTS: Product[] = [
   { id: '3', name: 'FORTUNE SOYABEAN OIL 1 LTR', hsn: '15079010', priceWithGst: 120.00, gstPercent: 5, uom: 'BTL', stockLabel: 'BOX(12.00) PCS(144.00)', defaultWeight: 0.91 },
   { id: '4', name: 'AASHIRVAAD ATTA SHUDH CHAKKI [10 KG]', hsn: '11010000', priceWithGst: 450.00, gstPercent: 0, uom: 'BAG', stockLabel: 'BOX(0.00) PCS(15.00)', defaultWeight: 10.00 },
   { id: '5', name: 'TATA SALT PRO VACUUM EVAPORATED [1 KG]', hsn: '25010021', priceWithGst: 28.00, gstPercent: 0, uom: 'PCS', stockLabel: 'BOX(2.00) PCS(50.00)', defaultWeight: 1.00 },
-  { id: '6', name: 'ashirwad SALT PRO VACUUM EVAPORATED [1 KG]', hsn: '25010022', priceWithGst: 28.00, gstPercent: 0, uom: 'PCS', stockLabel: 'BOX(2.00) PCS(50.00)', defaultWeight: 1.00 }];
+  { id: '6', name: ' SALT PRO VACUUM EVAPORATED [1 KG]', hsn: '25010022', priceWithGst: 28.00, gstPercent: 0, uom: 'PCS', stockLabel: 'BOX(2.00) PCS(50.00)', defaultWeight: 1.00 }];
 
 const INITIAL_FORM: MasterForm = {
   name: 'adi',
@@ -66,6 +66,7 @@ export default function App() {
   const [note, setNote] = useState('');
   const [salesNotes, setSalesNotes] = useState('Enter sales notes here...');
   const [roundOff, setRoundOff] = useState('0.00');
+  const [showSummary, setShowSummary] = useState(false);
 
   // Calculate Net Rate & Rate & Net dynamically for the active item row
   const activeCalculated = useMemo(() => {
@@ -229,32 +230,33 @@ export default function App() {
       <InvoiceSidebar
         form={form}
         onChange={setForm}
-        darkMode={darkMode}
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
       />
 
-      <div className="flex-1 min-w-0 p-2.5 transition-all duration-300 ease-in-out max-w-[1500px] mx-auto h-screen flex flex-col overflow-hidden bg-panel-bg">
+      <div className="flex-1 min-w-0 p-2.5 transition-all duration-300 ease-in-out w-full min-h-screen md:h-screen flex flex-col overflow-y-auto md:overflow-hidden bg-panel-bg">
         {/* App Nav Bar */}
-        <header className="flex justify-between items-center px-2 py-1 border-b border-border-sec mb-1.5 shrink-0">
+        <header className="flex flex-col sm:flex-row sm:justify-between sm:items-center px-2 py-1.5 border-b border-border-sec mb-1.5 shrink-0 gap-2">
           <div className="flex items-center gap-2">
             <ShoppingBag size={16} className="text-text-acc" />
             <span className="text-app-lg font-bold tracking-wide text-text-main">
               Invoiso.ai
             </span>
-            <span className="text-app-xs bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400 px-1 py-0.5 rounded font-bold">cart creation</span>
+            <span className="text-app-xs bg-info-badge-bg text-info-badge-text px-1 py-0.5 rounded font-bold">cart creation</span>
           </div>
-          <div className="flex items-center gap-3">
-            <span className="text-app-sm text-text-mute">Wholesale Credit Terminal</span>
-            <button
-              className="px-2 py-0.5 rounded text-app-base font-semibold flex items-center gap-1 cursor-pointer transition-all border border-border-sec bg-text-main text-panel-bg"
-              onClick={toggleDarkMode}
-            >
-              {darkMode ? '☀️ Light Mode' : '🌙 Dark Mode'}
-            </button>
-            <button className="bg-border-acc hover:bg-emerald-600 text-white rounded text-app-base font-semibold flex items-center justify-center transition-all h-5 px-2 cursor-pointer">
-              + New Wholesale
-            </button>
+          <div className="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto">
+            <span className="text-app-sm text-text-mute hidden sm:inline">Wholesale Credit Terminal</span>
+            <div className="flex items-center gap-2 ml-auto sm:ml-0">
+              <button
+                className="px-2 py-0.5 rounded text-app-base font-semibold flex items-center gap-1 cursor-pointer transition-all border border-border-sec bg-text-main text-panel-bg"
+                onClick={toggleDarkMode}
+              >
+                {darkMode ? '☀️ Light Mode' : '🌙 Dark Mode'}
+              </button>
+              <button className="bg-border-acc hover:bg-action-hover text-white rounded text-app-base font-semibold flex items-center justify-center transition-all h-5 px-2 cursor-pointer">
+                + New Wholesale
+              </button>
+            </div>
           </div>
         </header>
 
@@ -263,21 +265,19 @@ export default function App() {
           <MasterHeader
             form={form}
             onChange={setForm}
-            darkMode={darkMode}
             sidebarOpen={sidebarOpen}
             onToggleSidebar={() => setSidebarOpen(true)}
           />
         </div>
 
         {/* CALLING MODULAR PRODUCTS LIST TABLE */}
-        <div className="flex-1 min-h-0 overflow-hidden mb-1.5">
+        <div className="flex-1 min-h-0 overflow-hidden mb-1">
           <ProductListTable
             items={items}
             setItems={setItems}
             editingSrNo={editingSrNo}
             setEditingSrNo={setEditingSrNo}
             handleDeleteItem={handleDeleteItem}
-            darkMode={darkMode}
           />
         </div>
 
@@ -304,7 +304,6 @@ export default function App() {
             setActiveGstPercent={setActiveGstPercent}
             activeCalculated={activeCalculated}
             handleAddItem={handleAddItem}
-            darkMode={darkMode}
           />
         </div>
 
@@ -333,7 +332,8 @@ export default function App() {
             roundOff={roundOff}
             setRoundOff={setRoundOff}
             handleSaveInvoice={handleSaveInvoice}
-            darkMode={darkMode}
+            showSummary={showSummary}
+            onToggleSummary={() => setShowSummary(!showSummary)}
           />
         </div>
       </div>

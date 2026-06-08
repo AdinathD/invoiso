@@ -5,79 +5,150 @@
      LIGHT MODE COLOR SYSTEM
      Consolidated minimal gray palette
      ========================================== */
-  
+
   /* Background Colors */
-  --bg-app: #f9fafb;             /* Main body / page background (very light neutral gray) */
-  --bg-panel: #ffffff;           /* Cards, panels, sidebars, and containers (pure white) */
-  
+  --bg-app: #ebe5d4;
+  /* Main body / page background (soft warm stone gray) */
+  --bg-panel: #f7f2e9;
+  /* Cards, panels, sidebars, and containers (warm ivory) */
+
   /* Typography Colors */
-  --text-primary: #111827;       /* Main headings, primary content, and active text (dark charcoal) */
-  --text-secondary: #4b5563;     /* Sub-labels, helper text, and secondary copy (medium gray) */
-  --text-muted: #9ca3af;         /* Placeholder text, disabled labels, and subtle hints (light gray) */
-  
+  --text-primary: #1f2022;
+  /* Main headings, primary content, and active text (warm dark charcoal) */
+  --text-secondary: #51545c;
+  /* Sub-labels, helper text, and secondary copy (warm medium gray) */
+  --text-muted: #8e9198;
+  /* Placeholder text, disabled labels, and subtle hints (warm muted gray) */
+
   /* Border & Divider Colors */
-  --border-primary: #e5e7eb;     /* Soft dividers, table grid lines, and subtle separations (very light gray) */
-  --border-secondary: #d1d5db;   /* Standard border for buttons, active panels, and controls (light gray) */
+  --border-primary: #e5e2d8;
+  /* Soft dividers, table grid lines, and subtle separations (soft warm border) */
+  --border-secondary: #cfcbbd;
+  /* Standard border for buttons, active panels, and controls (medium warm border) */
 
   /* Semantic Accent Colors (Emerald) */
-  --text-emerald: #059669;       /* Positive status values, success badges, and main accents */
-  --bg-emerald-light: #ecfdf5;   /* Background tint for success notifications and badges */
-  --border-emerald: #10b981;     /* Highlights for active selected states and positive borders */
-  --border-emerald-light: #a7f3d0;/* Subtle border tint for success elements */
-  
-  /* Input Form Elements (Reused from above to keep colors minimal) */
-  --input-bg: var(--bg-app);               /* Input boxes use the same light gray as app background */
-  --input-text: var(--text-primary);       /* Typing text matches primary body text */
-  --input-border: var(--border-secondary); /* Input borders map to secondary border gray */
-  --input-disabled-bg: var(--border-primary);/* Disabled inputs use the lighter border color */
-  --input-disabled-text: var(--text-muted);  /* Disabled input text matches muted text gray */
+  --text-emerald: #059669;
+  /* Positive status values, success badges, and main accents */
+  --bg-emerald-light: #f1f8f3;
+  /* Background tint for success notifications and badges (warmed up emerald) */
+  --border-emerald: #10b981;
+  /* Highlights for active selected states and positive borders */
+  --border-emerald-light: #bcdfc6;
+  /* Subtle border tint for success elements */
 
-  /* Font Sizes */
-  --text-xxs: 8px;
-  --text-xs: 9px;
-  --text-sm: 10px;
-  --text-base: 11px;
-  --text-md: 12px;
-  --text-lg: 14px;
-  --text-xl: 16px;
-  
+  /* Input Form Elements (Reused from above to keep colors minimal) */
+  --input-bg: var(--bg-app);
+  /* Input boxes use the same light gray as app background */
+  --input-text: var(--text-primary);
+  /* Typing text matches primary body text */
+  --input-border: var(--border-secondary);
+  /* Input borders map to secondary border gray */
+  --input-disabled-bg: var(--border-primary);
+  /* Disabled inputs use the lighter border color */
+  --input-disabled-text: var(--text-muted);
+  /* Disabled input text matches muted text gray */
+
+  /* Alert / Destructive States */
+  --text-alert: #dc2626;
+  /* Red for warnings, asterisks, and validation errors */
+
+  /* Info / Metadata Badges */
+  --bg-info-badge: #eff6ff;
+  /* Soft blue background for metadata badges */
+  --text-info-badge: #2563eb;
+  /* Bright blue text for info badges */
+
+  /* Hover Actions */
+  --bg-action-hover: #047857;
+  /* Darker green hover shade for success buttons */
+
+  /* View Overlay Backdrop */
+  --bg-overlay: rgba(0, 0, 0, 0.4);
+  /* Soft dark mask for backdrop overlay */
+
+  /* Font Sizes - Scalable relative units (Compact Hierarchy) */
+  --text-xxs: 0.5rem;
+  --text-xs: 0.575rem;
+  --text-sm: 0.65rem;
+  --text-base: 0.725rem;
+  --text-md: 0.8rem;
+  --text-lg: 0.9rem;
+  --text-xl: 1.1rem;
+
+
   /* Table Specific Sizes */
-  --text-table-header: 10px;
-  --text-table-body: 14px;
+  --text-table-header: 0.65rem;
+  --text-table-body: 0.85rem;
 }
 
 /* Dark Mode Color Combo */
-.dark, body.dark-mode, :root.dark {
+.dark,
+body.dark-mode,
+:root.dark {
   /* ==========================================
      DARK MODE COLOR SYSTEM
      Consolidated minimal gray palette
      ========================================== */
 
   /* Background Colors */
-  --bg-app: #0b0f19;             /* Main dark page background (deep charcoal/black) */
-  --bg-panel: #111827;           /* Cards, panels, sidebars, and container backgrounds (dark slate gray) */
+  --bg-app: #0b0f19;
+  /* Main dark page background (deep charcoal/black) */
+  --bg-panel: #12161f;
+  /* Cards, panels, sidebars, and container backgrounds (dark slate gray) */
 
   /* Typography Colors */
-  --text-primary: #f9fafb;       /* Main headings, primary content, and active text (off-white) */
-  --text-secondary: #d1d5db;     /* Sub-labels, helper text, and secondary copy (light gray) */
-  --text-muted: #6b7280;         /* Placeholder text, disabled labels, and subtle hints (medium gray) */
+  --text-primary: #f9fafb;
+  /* Main headings, primary content, and active text (off-white) */
+  --text-secondary: #d1d5db;
+  /* Sub-labels, helper text, and secondary copy (light gray) */
+  --text-muted: #6b7280;
+  /* Placeholder text, disabled labels, and subtle hints (medium gray) */
 
   /* Border & Divider Colors */
-  --border-primary: #1f2937;     /* Soft dividers, table grid lines, and separations (dark border gray) */
-  --border-secondary: #374151;   /* Standard border for buttons, inputs, and dark panels (medium-dark border gray) */
+  --border-primary: #1f2937;
+  /* Soft dividers, table grid lines, and separations (dark border gray) */
+  --border-secondary: #374151;
+  /* Standard border for buttons, inputs, and dark panels (medium-dark border gray) */
 
   /* Semantic Accent Colors (Emerald) */
-  --text-emerald: #34d399;       /* Accent/success colors tuned for dark background readability */
-  --bg-emerald-light: rgba(6, 78, 59, 0.4); /* Semi-transparent success tint */
-  --border-emerald: #10b981;     /* Highlights for active selected states */
-  --border-emerald-light: #064e3b;/* Subtle border tint for success elements */
+  --text-emerald: #34d399;
+  /* Accent/success colors tuned for dark background readability */
+  --bg-emerald-light: rgba(6, 78, 59, 0.4);
+  /* Semi-transparent success tint */
+  --border-emerald: #10b981;
+  /* Highlights for active selected states */
+  --border-emerald-light: #064e3b;
+  /* Subtle border tint for success elements */
 
   /* Input Form Elements (Reused from above to keep colors minimal) */
-  --input-bg: var(--border-primary);       /* Input background matches dark primary border */
-  --input-text: var(--text-primary);       /* Typing text matches primary white text */
-  --input-border: var(--border-secondary); /* Input borders use medium-dark border gray */
-  --input-disabled-bg: var(--bg-panel);     /* Disabled inputs blend with the panel background */
-  --input-disabled-text: var(--text-muted);  /* Disabled input text matches muted gray */
+  --input-bg: var(--border-primary);
+  /* Input background matches dark primary border */
+  --input-text: var(--text-primary);
+  /* Typing text matches primary white text */
+  --input-border: var(--border-secondary);
+  /* Input borders use medium-dark border gray */
+  --input-disabled-bg: var(--bg-panel);
+  /* Disabled inputs blend with the panel background */
+  --input-disabled-text: var(--text-muted);
+  /* Disabled input text matches muted gray */
+
+  /* Alert / Destructive States */
+  --text-alert: #ef4444;
+  /* High contrast red for dark mode warnings */
+
+  /* Info / Metadata Badges */
+  --bg-info-badge: rgba(30, 58, 138, 0.4);
+  /* Deep blue background for metadata badges */
+  --text-info-badge: #60a5fa;
+  /* Soft blue text for info badges */
+
+  /* Hover Actions */
+  --bg-action-hover: #059669;
+  /* Darker green hover shade for success buttons */
+
+  /* View Overlay Backdrop */
+  --bg-overlay: rgba(0, 0, 0, 0.6);
+  /* Slightly deeper dark mask for backdrop overlay */
 }
 
 /* Map CSS variables to Tailwind v4 Theme Configuration */
@@ -93,12 +164,18 @@
   --color-border-sec: var(--border-secondary);
   --color-border-acc: var(--border-emerald);
   --color-border-acc-light: var(--border-emerald-light);
-  
+
   --color-inp-bg: var(--input-bg);
   --color-inp-text: var(--input-text);
   --color-inp-border: var(--input-border);
   --color-inp-disabled-bg: var(--input-disabled-bg);
   --color-inp-disabled-text: var(--input-disabled-text);
+
+  --color-alert: var(--text-alert);
+  --color-info-badge-bg: var(--bg-info-badge);
+  --color-info-badge-text: var(--text-info-badge);
+  --color-action-hover: var(--bg-action-hover);
+  --color-overlay-bg: var(--bg-overlay);
 
   --text-app-xxs: var(--text-xxs);
   --text-app-xs: var(--text-xs);
@@ -118,8 +195,8 @@
     color: var(--text-primary);
     font-size: var(--text-base);
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
-    margin: 0;
-    padding: 8px;
+    margin: 0px;
+    padding: 0px;
     line-height: 1.625;
     -webkit-font-smoothing: antialiased;
     transition: background-color 150ms ease, color 150ms ease;

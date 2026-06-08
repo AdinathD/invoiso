@@ -20,14 +20,13 @@ export interface MasterForm {
 interface MasterHeaderProps {
   form: MasterForm;
   onChange: (updated: MasterForm) => void;
-  darkMode?: boolean;
   sidebarOpen: boolean;
   onToggleSidebar: () => void;
 }
 
-export const MasterHeader: React.FC<MasterHeaderProps> = ({ form, darkMode, sidebarOpen, onToggleSidebar }) => {
+export const MasterHeader: React.FC<MasterHeaderProps> = ({ form, sidebarOpen, onToggleSidebar }) => {
   return (
-    <div className="border border-border-acc rounded p-2 mb-2 transition-colors duration-150 relative flex items-center justify-between bg-panel-bg text-text-main">
+    <div className="border border-border-acc rounded p-2 mb-2 transition-colors duration-150 relative flex flex-col sm:flex-row gap-2 sm:items-center justify-between bg-panel-bg text-text-main">
 
       {/* Left Side: Hamburger Icon & Title */}
       <div className="flex items-center gap-3">
@@ -52,7 +51,7 @@ export const MasterHeader: React.FC<MasterHeaderProps> = ({ form, darkMode, side
       </div>
 
       {/* Right Side: Inputted Name from Hamburger Menu */}
-      <div className="flex items-center gap-2 bg-emerald-light border border-border-acc-light rounded px-2.5 py-1">
+      <div className="flex items-center gap-2 bg-emerald-light border border-border-acc-light rounded px-2.5 py-1 self-start sm:self-auto">
         <User size={12} className="text-text-acc" />
         <span className="text-app-sm font-medium text-text-mute">Customer:</span>
         <span className="text-app-base font-extrabold text-text-acc truncate max-w-[200px]">
@@ -66,12 +65,11 @@ export const MasterHeader: React.FC<MasterHeaderProps> = ({ form, darkMode, side
 interface InvoiceSidebarProps {
   form: MasterForm;
   onChange: (updated: MasterForm) => void;
-  darkMode?: boolean;
   isOpen: boolean;
   onClose: () => void;
 }
 
-export const InvoiceSidebar: React.FC<InvoiceSidebarProps> = ({ form, onChange, darkMode, isOpen, onClose }) => {
+export const InvoiceSidebar: React.FC<InvoiceSidebarProps> = ({ form, onChange, isOpen, onClose }) => {
   const handleFieldChange = (key: keyof MasterForm, value: string) => {
     onChange({
       ...form,
@@ -80,33 +78,44 @@ export const InvoiceSidebar: React.FC<InvoiceSidebarProps> = ({ form, onChange, 
   };
 
   return (
-    <div
-      className={`shrink-0 transition-all duration-300 ease-in-out h-screen sticky top-0 flex flex-col z-40 bg-panel-bg text-text-main border-border-sec ${isOpen ? 'w-[320px] border-r' : 'w-0 overflow-hidden border-r-0'
+    <>
+      {/* Mobile Backdrop */}
+      {isOpen && (
+        <div 
+          className="fixed inset-0 bg-black/40 z-40 md:hidden transition-opacity duration-300"
+          onClick={onClose}
+        />
+      )}
+      <div
+        className={`fixed md:sticky top-0 bottom-0 left-0 h-screen flex flex-col z-50 md:z-30 bg-panel-bg text-text-main border-border-sec transition-all duration-300 ease-in-out ${
+          isOpen 
+            ? 'w-[300px] sm:w-[320px] translate-x-0 border-r shadow-2xl md:shadow-none' 
+            : 'w-0 -translate-x-full md:translate-x-0 md:w-0 overflow-hidden border-r-0'
         }`}
-    >
-      {/* Fixed width container to prevent content wrapping/reflow during width animation */}
-      <div className="w-[320px] h-full flex flex-col">
-        {/* Drawer Header */}
-        <div className="flex items-center justify-between p-4 border-b border-border-sec">
-          <div className="flex flex-col">
-            <span className="text-app-lg font-extrabold text-text-acc">Invoice Details</span>
-            <span className="text-app-sm text-text-mute">Configure customer & invoice parameters</span>
+      >
+        {/* Fixed width container to prevent content wrapping/reflow during width animation */}
+        <div className="w-[300px] sm:w-[320px] h-full flex flex-col">
+          {/* Drawer Header */}
+          <div className="flex items-center justify-between p-4 border-b border-border-sec">
+            <div className="flex flex-col">
+              <span className="text-app-lg font-extrabold text-text-acc">Invoice Details</span>
+              <span className="text-app-sm text-text-mute">Configure customer & invoice parameters</span>
+            </div>
+            <button
+              onClick={onClose}
+              className="p-1 rounded-md hover:bg-app-bg transition-colors cursor-pointer text-text-mute"
+            >
+              <X size={16} />
+            </button>
           </div>
-          <button
-            onClick={onClose}
-            className="p-1 rounded-md hover:bg-app-bg transition-colors cursor-pointer text-text-mute"
-          >
-            <X size={16} />
-          </button>
-        </div>
 
-        {/* Drawer Body (Form Fields) */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+          {/* Drawer Body (Form Fields) */}
+          <div className="flex-1 overflow-y-auto p-4 space-y-4">
 
           {/* Name Field */}
           <div className="flex flex-col">
             <span className="text-app-sm font-extrabold text-text-main mb-1">
-              Name<span className="text-red-500 ml-0.5">*</span>
+              Name<span className="text-alert ml-0.5">*</span>
             </span>
             <div className="relative flex items-center">
               <User size={12} className="absolute left-2 text-text-mute" />
@@ -270,5 +279,6 @@ export const InvoiceSidebar: React.FC<InvoiceSidebarProps> = ({ form, onChange, 
         </div>
       </div>
     </div>
-  );
+  </>
+);
 };

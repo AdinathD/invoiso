@@ -32,7 +32,6 @@ interface AddProductFormProps {
   setActiveGstPercent: (val: string) => void;
   activeCalculated: { rate: string; netRate: string; net: string };
   handleAddItem: () => void;
-  darkMode?: boolean;
 }
 
 export const AddProductForm: React.FC<AddProductFormProps> = ({
@@ -55,7 +54,6 @@ export const AddProductForm: React.FC<AddProductFormProps> = ({
   setActiveGstPercent,
   activeCalculated,
   handleAddItem,
-  darkMode,
 }) => {
   const filteredProducts = React.useMemo(() => {
     if (!activeSearch) return products;
@@ -66,7 +64,7 @@ export const AddProductForm: React.FC<AddProductFormProps> = ({
 
   return (
     <div className="border border-border-acc/20 rounded p-1 mb-1 transition-all duration-300 shadow-sm bg-panel-bg text-text-main">
- 
+
       <div className="grid grid-cols-12 gap-1 items-end">
         {/* Autocomplete Input Search */}
         <div className="relative col-span-12 md:col-span-3 flex flex-col gap-0.5">
@@ -92,14 +90,14 @@ export const AddProductForm: React.FC<AddProductFormProps> = ({
                 >
                   <div className="font-extrabold text-text-main">{p.name}</div>
                   <div className="text-app-xs text-text-mute mt-0.5">
-                    Stock: <span className="text-red-500 font-bold">{p.stockLabel}</span> | Rate + GST: <span className="text-text-acc font-bold">INR {p.priceWithGst.toFixed(2)}</span>
+                    Stock: <span className="text-alert font-bold">{p.stockLabel}</span> | Rate + GST: <span className="text-text-acc font-bold">INR {p.priceWithGst.toFixed(2)}</span>
                   </div>
                 </div>
               ))}
             </div>
           )}
         </div>
- 
+
         {/* Qty Input */}
         <div className="col-span-6 sm:col-span-4 md:col-span-1 flex flex-col gap-0.5">
           <label className="text-app-sm font-bold text-text-sec block text-right pr-0.5">Qty</label>
@@ -112,7 +110,7 @@ export const AddProductForm: React.FC<AddProductFormProps> = ({
             placeholder="Qty"
           />
         </div>
- 
+
         {/* UOM Input */}
         <div className="col-span-6 sm:col-span-4 md:col-span-1 flex flex-col gap-0.5">
           <label className="text-app-sm font-bold text-text-sec block text-center">UOM</label>
@@ -124,7 +122,7 @@ export const AddProductForm: React.FC<AddProductFormProps> = ({
             placeholder="UOM"
           />
         </div>
- 
+
         {/* Price Input */}
         <div className="col-span-6 sm:col-span-4 md:col-span-1 flex flex-col gap-0.5">
           <label className="text-app-sm font-bold text-text-sec block text-right pr-0.5">Price (+GST)</label>
@@ -137,7 +135,7 @@ export const AddProductForm: React.FC<AddProductFormProps> = ({
             placeholder="Price"
           />
         </div>
- 
+
         {/* Weight Input */}
         <div className="col-span-6 sm:col-span-4 md:col-span-1 flex flex-col gap-0.5">
           <label className="text-app-sm font-bold text-text-sec block text-right pr-0.5">Weight</label>
@@ -150,7 +148,7 @@ export const AddProductForm: React.FC<AddProductFormProps> = ({
             placeholder="Weight"
           />
         </div>
- 
+
         {/* Net Rate (Read Only) */}
         <div className="col-span-6 sm:col-span-4 md:col-span-1 flex flex-col gap-0.5">
           <label className="text-app-sm font-bold text-text-sec block text-right pr-0.5">Net Rate</label>
@@ -162,7 +160,7 @@ export const AddProductForm: React.FC<AddProductFormProps> = ({
             disabled
           />
         </div>
- 
+
         {/* Rate (Read Only) */}
         <div className="col-span-6 sm:col-span-4 md:col-span-1 flex flex-col gap-0.5">
           <label className="text-app-sm font-bold text-text-sec block text-right pr-0.5">Rate</label>
@@ -174,7 +172,7 @@ export const AddProductForm: React.FC<AddProductFormProps> = ({
             disabled
           />
         </div>
- 
+
         {/* GST Percent Dropdown */}
         <div className="col-span-6 sm:col-span-4 md:col-span-1 flex flex-col gap-0.5">
           <label className="text-app-sm font-bold text-text-sec block text-center">GST %</label>
@@ -190,7 +188,7 @@ export const AddProductForm: React.FC<AddProductFormProps> = ({
             <option value="28">28%</option>
           </select>
         </div>
- 
+
         {/* Net Total (Read Only) */}
         <div className="col-span-6 sm:col-span-4 md:col-span-1 flex flex-col gap-0.5">
           <label className="text-app-sm font-bold text-text-sec block text-right pr-0.5">Net Total</label>
@@ -202,11 +200,11 @@ export const AddProductForm: React.FC<AddProductFormProps> = ({
             disabled
           />
         </div>
- 
+
         {/* Action Button - Icon Only */}
         <div className="col-span-12 sm:col-span-4 md:col-span-1">
           <button
-            className="bg-border-acc hover:bg-emerald-600 active:scale-95 text-white rounded text-app-base font-bold cursor-pointer flex items-center justify-center transition-all h-[26px] w-full shadow-sm"
+            className="bg-border-acc hover:bg-action-hover active:scale-95 text-white rounded text-app-base font-bold cursor-pointer flex items-center justify-center transition-all h-[26px] w-full shadow-sm"
             onClick={handleAddItem}
             title="Add Item to table"
           >
@@ -214,14 +212,13 @@ export const AddProductForm: React.FC<AddProductFormProps> = ({
           </button>
         </div>
       </div>
- 
+
       {/* Stock badge relocated beneath inputs to the bottom-right */}
       <div className="flex justify-end mt-0.5 text-app-xs pr-0.5">
-        <span className={`font-bold ${
-          selectedProduct 
-            ? 'text-red-500' 
-            : 'text-text-mute'
-        }`}>
+        <span className={`font-bold ${selectedProduct
+          ? 'text-alert'
+          : 'text-text-mute'
+          }`}>
           {selectedProduct ? `⚠️ Stock: ${selectedProduct.stockLabel}` : 'No Product Selected / Inventory'}
         </span>
       </div>

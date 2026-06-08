@@ -22,7 +22,6 @@ interface ProductListTableProps {
   editingSrNo: number | null;
   setEditingSrNo: (srNo: number | null) => void;
   handleDeleteItem: (srNo: number) => void;
-  darkMode?: boolean;
 }
 
 export const ProductListTable: React.FC<ProductListTableProps> = ({
@@ -31,7 +30,6 @@ export const ProductListTable: React.FC<ProductListTableProps> = ({
   editingSrNo,
   setEditingSrNo,
   handleDeleteItem,
-  darkMode,
 }) => {
 
   // -----------------------------
@@ -69,7 +67,7 @@ export const ProductListTable: React.FC<ProductListTableProps> = ({
     <div
       className="overflow-auto border border-border-main bg-panel-bg rounded mb-1.5 transition-colors duration-150 h-full"
     >
-      <table className="w-full border-collapse text-left">
+      <table className="w-full min-w-[900px] lg:min-w-full border-collapse text-left">
         <thead>
           <tr
             className="font-bold text-table-header border-b bg-app-bg text-text-main border-border-sec"
@@ -292,7 +290,7 @@ export const ProductListTable: React.FC<ProductListTableProps> = ({
                     </button>
                   )}
                   <button
-                    className="p-0.5 rounded text-text-mute hover:bg-red-500/10 hover:text-red-500 cursor-pointer"
+                    className="p-0.5 rounded text-text-mute hover:bg-alert/10 hover:text-alert cursor-pointer"
                     onClick={() => handleDeleteItem(item.srNo)}
                     title="Delete Row"
                   >
