@@ -1,4 +1,5 @@
 import React from 'react';
+import { useKeyboardField, useKeyboardRegistry } from './KeyboardRegistryContext';
 
 interface SummaryFooterProps {
   totals: {
@@ -60,11 +61,71 @@ export const SummaryFooter: React.FC<SummaryFooterProps> = ({
   showSummary,
   onToggleSummary,
 }) => {
+  const { handleGroupTraversal } = useKeyboardRegistry();
+
+  // Register fields in summary group
+  const discountInputRef = useKeyboardField({
+    id: 'summaryDiscount',
+    group: 'summary',
+  });
+
+  const hamaliInputRef = useKeyboardField({
+    id: 'summaryHamali',
+    group: 'summary',
+  });
+
+  const freightInputRef = useKeyboardField({
+    id: 'summaryFreight',
+    group: 'summary',
+  });
+
+  const creditBillInputRef = useKeyboardField({
+    id: 'summaryCreditBill',
+    group: 'summary',
+  });
+
+  const salesmanInputRef = useKeyboardField({
+    id: 'summarySalesman',
+    group: 'summary',
+  });
+
+  const vehicleNoInputRef = useKeyboardField({
+    id: 'summaryVehicleNo',
+    group: 'summary',
+  });
+
+  const transportInputRef = useKeyboardField({
+    id: 'summaryTransport',
+    group: 'summary',
+  });
+
+  const noteInputRef = useKeyboardField({
+    id: 'summaryNote',
+    group: 'summary',
+  });
+
+  const salesNotesInputRef = useKeyboardField({
+    id: 'summarySalesNotes',
+    group: 'summary',
+  });
+
+  const roundOffInputRef = useKeyboardField({
+    id: 'summaryRoundOff',
+    group: 'summary',
+  });
+
+  const saveBtnRef = useKeyboardField({
+    id: 'summarySave',
+    group: 'summary',
+  });
+
   return (
     <div className="flex flex-col w-full sticky bottom-0 z-40 bg-panel-bg border-t border-border-main">
       {/* Sticky Bottom Toggle Bar */}
       <button
         onClick={onToggleSummary}
+        aria-expanded={showSummary}
+        aria-controls="invoice-summary-details"
         className="w-full flex items-center justify-between px-3 py-0.25 bg-app-bg hover:bg-border-primary border-b border-border-primary text-text-main text-app-base font-bold transition-all cursor-pointer focus:outline-none shadow-sm"
       >
         <span>
@@ -77,8 +138,13 @@ export const SummaryFooter: React.FC<SummaryFooterProps> = ({
 
       {/* Collapsible Details Grid */}
       <div
-        className={`transition-all duration-300 ease-in-out overflow-hidden ${showSummary ? 'max-h-[500px] opacity-100 p-2' : 'max-h-0 opacity-0 p-0 pointer-events-none'
-          }`}
+        id="invoice-summary-details"
+        role="region"
+        aria-label="Invoice Summary Details"
+        onKeyDown={(e) => handleGroupTraversal(e, 'summary')}
+        className={`transition-all duration-300 ease-in-out overflow-hidden ${
+          showSummary ? 'max-h-[500px] opacity-100 p-2' : 'max-h-0 opacity-0 p-0 pointer-events-none'
+        }`}
       >
         <div className="grid grid-cols-1 md:grid-cols-12 gap-2 text-text-main">
           {/* Left Logistics Block */}
@@ -115,6 +181,7 @@ export const SummaryFooter: React.FC<SummaryFooterProps> = ({
               <div className="flex flex-col">
                 <span className="text-app-sm font-bold text-text-main">Disc(%)</span>
                 <input
+                  ref={discountInputRef}
                   type="number"
                   className="border border-inp-border bg-inp-bg text-inp-text rounded px-1 py-0.2 text-app-base h-6 w-full text-right focus:outline-none font-bold"
                   value={discPercent}
@@ -124,6 +191,7 @@ export const SummaryFooter: React.FC<SummaryFooterProps> = ({
               <div className="flex flex-col">
                 <span className="text-app-sm font-bold text-text-main">Hamali(+)</span>
                 <input
+                  ref={hamaliInputRef}
                   type="number"
                   className="border border-inp-border bg-inp-bg text-inp-text rounded px-1 py-0.2 text-app-base h-6 w-full text-right focus:outline-none font-bold"
                   value={hamali}
@@ -133,6 +201,7 @@ export const SummaryFooter: React.FC<SummaryFooterProps> = ({
               <div className="flex flex-col">
                 <span className="text-app-sm font-bold text-text-main">Freight(+)</span>
                 <input
+                  ref={freightInputRef}
                   type="number"
                   className="border border-inp-border bg-inp-bg text-inp-text rounded px-1 py-0.2 text-app-base h-6 w-full text-right focus:outline-none font-bold"
                   value={freight}
@@ -141,6 +210,7 @@ export const SummaryFooter: React.FC<SummaryFooterProps> = ({
               </div>
               <div className="flex items-center gap-1 mt-3.5 pl-1 col-span-1">
                 <input
+                  ref={creditBillInputRef}
                   type="checkbox"
                   id="creditBill"
                   checked={creditBill}
@@ -157,6 +227,7 @@ export const SummaryFooter: React.FC<SummaryFooterProps> = ({
               <div className="flex flex-col col-span-12 sm:col-span-3">
                 <span className="text-app-sm font-bold text-text-main">Salesman</span>
                 <select
+                  ref={salesmanInputRef}
                   className="border border-inp-border bg-inp-bg text-inp-text rounded px-1.5 py-0.2 text-app-base h-6 w-full focus:outline-none font-bold focus:border-border-acc cursor-pointer"
                   value={salesman}
                   onChange={(e) => setSalesman(e.target.value)}
@@ -169,6 +240,7 @@ export const SummaryFooter: React.FC<SummaryFooterProps> = ({
               <div className="flex flex-col col-span-12 sm:col-span-3">
                 <span className="text-app-sm font-bold text-text-main">Vehicle No</span>
                 <input
+                  ref={vehicleNoInputRef}
                   type="text"
                   className="border border-inp-border bg-inp-bg text-inp-text rounded px-1.5 py-0.2 text-app-base h-6 w-full focus:outline-none font-bold focus:border-border-acc"
                   value={vehicleNo}
@@ -178,6 +250,7 @@ export const SummaryFooter: React.FC<SummaryFooterProps> = ({
               <div className="flex flex-col col-span-12 sm:col-span-3">
                 <span className="text-app-sm font-bold text-text-main">Transport</span>
                 <input
+                  ref={transportInputRef}
                   type="text"
                   className="border border-inp-border bg-inp-bg text-inp-text rounded px-1.5 py-0.2 text-app-base h-6 w-full focus:outline-none font-bold focus:border-border-acc"
                   value={transport}
@@ -187,6 +260,7 @@ export const SummaryFooter: React.FC<SummaryFooterProps> = ({
               <div className="flex flex-col col-span-12 sm:col-span-3">
                 <span className="text-app-sm font-bold text-text-main">Note</span>
                 <input
+                  ref={noteInputRef}
                   type="text"
                   className="border border-inp-border bg-inp-bg text-inp-text rounded px-1.5 py-0.2 text-app-base h-6 w-full focus:outline-none font-semibold placeholder-text-mute focus:border-border-acc"
                   value={note}
@@ -201,6 +275,7 @@ export const SummaryFooter: React.FC<SummaryFooterProps> = ({
           <div className="md:col-span-3 flex flex-col">
             <span className="text-app-sm font-bold text-text-main">Sales Notes</span>
             <input
+              ref={salesNotesInputRef}
               type="text"
               className="border border-inp-border bg-inp-bg text-inp-text rounded px-1.5 py-0.2 text-app-base h-6 w-full focus:outline-none font-bold"
               value={salesNotes}
@@ -228,6 +303,7 @@ export const SummaryFooter: React.FC<SummaryFooterProps> = ({
               <div className="flex items-center gap-1 text-app-xxs font-medium text-text-sec">
                 <span>Round off:</span>
                 <input
+                  ref={roundOffInputRef}
                   type="number"
                   step="0.01"
                   className="border border-inp-border bg-inp-bg text-inp-text rounded px-0.5 text-app-xxs h-3.5 w-9 text-right focus:outline-none focus:ring-1 focus:ring-border-acc font-bold"
@@ -243,6 +319,7 @@ export const SummaryFooter: React.FC<SummaryFooterProps> = ({
 
             {/* Row 3: Action Button */}
             <button
+              ref={saveBtnRef}
               className="w-full bg-border-acc hover:bg-action-hover active:scale-[0.98] text-white rounded text-app-base font-bold py-0.5 transition-all cursor-pointer shadow-sm"
               onClick={handleSaveInvoice}
             >
@@ -254,3 +331,4 @@ export const SummaryFooter: React.FC<SummaryFooterProps> = ({
     </div>
   );
 };
+

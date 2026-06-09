@@ -1,5 +1,6 @@
 import React from 'react';
 import { User, Phone, Clipboard, Menu, X } from 'lucide-react';
+import { useKeyboardField, useKeyboardRegistry } from './KeyboardRegistryContext';
 
 export interface MasterForm {
   name: string;
@@ -33,6 +34,8 @@ export const MasterHeader: React.FC<MasterHeaderProps> = ({ form, sidebarOpen, o
         {!sidebarOpen && (
           <button
             onClick={onToggleSidebar}
+            aria-expanded={sidebarOpen}
+            aria-controls="invoice-sidebar"
             className="p-1.5 rounded-md hover:bg-border-acc/10 active:bg-border-acc/25 transition-colors cursor-pointer text-text-acc focus:outline-none"
             title="Open Details Menu"
           >
@@ -67,9 +70,91 @@ interface InvoiceSidebarProps {
   onChange: (updated: MasterForm) => void;
   isOpen: boolean;
   onClose: () => void;
+  onBillToEnter: () => void;
 }
 
-export const InvoiceSidebar: React.FC<InvoiceSidebarProps> = ({ form, onChange, isOpen, onClose }) => {
+export const InvoiceSidebar: React.FC<InvoiceSidebarProps> = ({ form, onChange, isOpen, onClose, onBillToEnter }) => {
+  const { handleGroupTraversal, focusField } = useKeyboardRegistry();
+
+  React.useEffect(() => {
+    if (isOpen) {
+      setTimeout(() => {
+        focusField('customerName');
+      }, 100);
+    }
+  }, [isOpen, focusField]);
+
+  // Register all fields
+  const nameInputRef = useKeyboardField({
+    id: 'customerName',
+    group: 'sidebar'
+  });
+
+  const mobileInputRef = useKeyboardField({
+    id: 'customerMobile',
+    group: 'sidebar'
+  });
+
+  const remarksInputRef = useKeyboardField({
+    id: 'customerRemarks',
+    group: 'sidebar'
+  });
+
+  const balanceInputRef = useKeyboardField({
+    id: 'customerBalance',
+    group: 'sidebar'
+  });
+
+  const panInputRef = useKeyboardField({
+    id: 'customerPan',
+    group: 'sidebar'
+  });
+
+  const gstTypeInputRef = useKeyboardField({
+    id: 'customerGstType',
+    group: 'sidebar'
+  });
+
+  const gstinInputRef = useKeyboardField({
+    id: 'customerGstIn',
+    group: 'sidebar'
+  });
+
+  const cityInputRef = useKeyboardField({
+    id: 'customerCity',
+    group: 'sidebar'
+  });
+
+  const stateInputRef = useKeyboardField({
+    id: 'customerState',
+    group: 'sidebar'
+  });
+
+  const countryInputRef = useKeyboardField({
+    id: 'customerCountry',
+    group: 'sidebar'
+  });
+
+  const billToInputRef = useKeyboardField({
+    id: 'customerBillTo',
+    group: 'sidebar',
+    onEnter: (e) => {
+      if (!e.shiftKey) {
+        if (!form.name.trim()) {
+          alert("Please fill in the Customer Name before proceeding.");
+          focusField('customerName');
+        } else {
+          onBillToEnter();
+        }
+        return true;
+      }
+    }
+  });
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    handleGroupTraversal(e, 'sidebar');
+  };
+
   const handleFieldChange = (key: keyof MasterForm, value: string) => {
     onChange({
       ...form,
@@ -87,6 +172,10 @@ export const InvoiceSidebar: React.FC<InvoiceSidebarProps> = ({ form, onChange, 
         />
       )}
       <div
+        id="invoice-sidebar"
+        role="dialog"
+        aria-modal="false"
+        aria-label="Invoice Details"
         className={`fixed md:sticky top-0 bottom-0 left-0 h-screen flex flex-col z-50 md:z-30 bg-panel-bg text-text-main border-border-sec transition-all duration-300 ease-in-out ${
           isOpen 
             ? 'w-[300px] sm:w-[320px] translate-x-0 border-r shadow-2xl md:shadow-none' 
@@ -103,6 +192,7 @@ export const InvoiceSidebar: React.FC<InvoiceSidebarProps> = ({ form, onChange, 
             </div>
             <button
               onClick={onClose}
+              aria-label="Close Details Menu"
               className="p-1 rounded-md hover:bg-app-bg transition-colors cursor-pointer text-text-mute"
             >
               <X size={16} />
@@ -110,7 +200,10 @@ export const InvoiceSidebar: React.FC<InvoiceSidebarProps> = ({ form, onChange, 
           </div>
 
           {/* Drawer Body (Form Fields) */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-4">
+          <div 
+            onKeyDown={handleKeyDown}
+            className="flex-1 overflow-y-auto p-4 space-y-4"
+          >
 
           {/* Name Field */}
           <div className="flex flex-col">
@@ -120,6 +213,7 @@ export const InvoiceSidebar: React.FC<InvoiceSidebarProps> = ({ form, onChange, 
             <div className="relative flex items-center">
               <User size={12} className="absolute left-2 text-text-mute" />
               <input
+                ref={nameInputRef}
                 type="text"
                 className="border border-inp-border bg-inp-bg text-inp-text rounded px-2 pl-6 py-1.5 text-app-md h-8 w-full focus:outline-none focus:border-border-acc"
                 value={form.name}
@@ -136,6 +230,7 @@ export const InvoiceSidebar: React.FC<InvoiceSidebarProps> = ({ form, onChange, 
             <div className="relative flex items-center">
               <Phone size={12} className="absolute left-2 text-text-mute" />
               <input
+                ref={mobileInputRef}
                 type="text"
                 className="border border-inp-border bg-inp-bg text-inp-text rounded px-2 pl-6 py-1.5 text-app-md h-8 w-full focus:outline-none focus:border-border-acc"
                 value={form.mobileNo}
@@ -151,6 +246,7 @@ export const InvoiceSidebar: React.FC<InvoiceSidebarProps> = ({ form, onChange, 
             <div className="relative flex items-center">
               <Clipboard size={12} className="absolute left-2 text-text-mute" />
               <input
+                ref={remarksInputRef}
                 type="text"
                 className="border border-inp-border bg-inp-bg text-inp-text rounded px-2 pl-6 py-1.5 text-app-md h-8 w-full focus:outline-none focus:border-border-acc"
                 value={form.remarks}
@@ -164,6 +260,7 @@ export const InvoiceSidebar: React.FC<InvoiceSidebarProps> = ({ form, onChange, 
           <div className="flex flex-col">
             <span className="text-app-sm font-extrabold text-text-main mb-1">Balance</span>
             <input
+              ref={balanceInputRef}
               type="text"
               className="border border-inp-border bg-inp-bg text-inp-text rounded px-2 py-1.5 text-app-md h-8 w-full focus:outline-none focus:border-border-acc"
               value={form.balance}
@@ -193,6 +290,7 @@ export const InvoiceSidebar: React.FC<InvoiceSidebarProps> = ({ form, onChange, 
               <div className="flex flex-col">
                 <span className="text-app-sm font-extrabold text-text-main mb-1">PAN</span>
                 <input
+                  ref={panInputRef}
                   type="text"
                   className="border border-inp-border bg-inp-bg text-inp-text rounded px-2 py-1 text-app-md h-8 w-full focus:outline-none focus:border-border-acc"
                   value={form.pan}
@@ -205,6 +303,7 @@ export const InvoiceSidebar: React.FC<InvoiceSidebarProps> = ({ form, onChange, 
               <div className="flex flex-col">
                 <span className="text-app-sm font-extrabold text-text-main mb-1">GST Type</span>
                 <select
+                  ref={gstTypeInputRef}
                   className="border border-inp-border bg-inp-bg text-inp-text rounded px-2 py-1 text-app-md h-8 w-full focus:outline-none focus:border-border-acc cursor-pointer"
                   value={form.gstType}
                   onChange={(e) => handleFieldChange('gstType', e.target.value)}
@@ -221,6 +320,7 @@ export const InvoiceSidebar: React.FC<InvoiceSidebarProps> = ({ form, onChange, 
             <div className="flex flex-col">
               <span className="text-app-sm font-extrabold text-text-main mb-1">GSTIN</span>
               <input
+                ref={gstinInputRef}
                 type="text"
                 className="border border-inp-border bg-inp-bg text-inp-text rounded px-2 py-1.5 text-app-md h-8 w-full focus:outline-none focus:border-border-acc"
                 value={form.gst}
@@ -235,6 +335,7 @@ export const InvoiceSidebar: React.FC<InvoiceSidebarProps> = ({ form, onChange, 
               <div className="grid grid-cols-3 gap-1.5">
                 <div className="flex flex-col">
                   <input
+                    ref={cityInputRef}
                     type="text"
                     className="border border-inp-border bg-inp-bg text-inp-text rounded px-1.5 py-1 text-app-base h-8 w-full focus:outline-none focus:border-border-acc"
                     value={form.city}
@@ -244,6 +345,7 @@ export const InvoiceSidebar: React.FC<InvoiceSidebarProps> = ({ form, onChange, 
                 </div>
                 <div className="flex flex-col">
                   <input
+                    ref={stateInputRef}
                     type="text"
                     className="border border-inp-border bg-inp-bg text-inp-text rounded px-1.5 py-1 text-app-base h-8 w-full focus:outline-none focus:border-border-acc"
                     value={form.state}
@@ -253,6 +355,7 @@ export const InvoiceSidebar: React.FC<InvoiceSidebarProps> = ({ form, onChange, 
                 </div>
                 <div className="flex flex-col">
                   <input
+                    ref={countryInputRef}
                     type="text"
                     className="border border-inp-border bg-inp-bg text-inp-text rounded px-1.5 py-1 text-app-base h-8 w-full focus:outline-none focus:border-border-acc"
                     value={form.country}
@@ -267,6 +370,7 @@ export const InvoiceSidebar: React.FC<InvoiceSidebarProps> = ({ form, onChange, 
             <div className="flex flex-col pt-1">
               <span className="text-app-sm font-extrabold text-text-acc mb-1">BILL TO</span>
               <input
+                ref={billToInputRef}
                 type="text"
                 className="border border-border-acc-light bg-emerald-light text-text-acc rounded px-2 py-1.5 text-app-md h-8 w-full focus:outline-none focus:border-border-acc font-semibold"
                 value={form.billTo}
@@ -282,3 +386,4 @@ export const InvoiceSidebar: React.FC<InvoiceSidebarProps> = ({ form, onChange, 
   </>
 );
 };
+

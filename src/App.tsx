@@ -1,5 +1,5 @@
-import { useState, useMemo } from 'react';
-import { ShoppingBag } from 'lucide-react';
+import { useState, useMemo, useEffect } from 'react';
+import { ShoppingBag, X } from 'lucide-react';
 import { MasterHeader, InvoiceSidebar } from './sidebar';
 import type { MasterForm } from './sidebar';
 import { AddProductForm } from './AddProductForm';
@@ -7,6 +7,7 @@ import type { Product } from './AddProductForm';
 import { ProductListTable } from './ProductListTable';
 import type { TableItem } from './ProductListTable';
 import { SummaryFooter } from './SummaryFooter';
+import { KeyboardRegistryProvider, useKeyboardRegistry } from './KeyboardRegistryContext';
 
 // In-Memory Database for demonstration
 const SAMPLE_PRODUCTS: Product[] = [
@@ -33,10 +34,12 @@ const INITIAL_FORM: MasterForm = {
   billTo: 'ABC General Stores'
 };
 
-export default function App() {
+function AppContent() {
+  const { focusField } = useKeyboardRegistry();
+
   // Master form state
   const [form, setForm] = useState<MasterForm>(INITIAL_FORM);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
 
   // Table items state
   const [items, setItems] = useState<TableItem[]>([]);
@@ -67,6 +70,60 @@ export default function App() {
   const [salesNotes, setSalesNotes] = useState('Enter sales notes here...');
   const [roundOff, setRoundOff] = useState('0.00');
   const [showSummary, setShowSummary] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
+
+  useEffect(() => {
+    const handleGlobalKeyDown = (e: KeyboardEvent) => {
+      if (e.ctrlKey && e.key.toLowerCase() === 'b') {
+        e.preventDefault();
+        setSidebarOpen(prev => !prev);
+      }
+      if (e.ctrlKey && e.key.toLowerCase() === 'm') {
+        e.preventDefault();
+        setShowSummary(prev => !prev);
+      }
+      if (e.ctrlKey && e.key.toLowerCase() === 'f') {
+        e.preventDefault();
+        focusField('productSearch');
+        setShowDropdown(true);
+      }
+      if (e.ctrlKey && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        focusField('productTable');
+      }
+      if (e.ctrlKey && (e.key.toLowerCase() === 'g' || e.key.toLowerCase() === 'j')) {
+        e.preventDefault();
+        setShowSummary(true);
+        setTimeout(() => {
+          focusField('summaryDiscount');
+        }, 100);
+      }
+      if (e.key === 'F1' || (e.ctrlKey && e.key === '/')) {
+        e.preventDefault();
+        setShowHelp(prev => !prev);
+      }
+      if (e.key === 'Escape') {
+        if (showHelp) {
+          e.preventDefault();
+          setShowHelp(false);
+        } else if (showDropdown) {
+          e.preventDefault();
+          setShowDropdown(false);
+        } else if (showSummary) {
+          e.preventDefault();
+          setShowSummary(false);
+        } else if (sidebarOpen) {
+          e.preventDefault();
+          setSidebarOpen(false);
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleGlobalKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleGlobalKeyDown);
+    };
+  }, [showDropdown, showSummary, sidebarOpen, focusField]);
 
   // Calculate Net Rate & Rate & Net dynamically for the active item row
   const activeCalculated = useMemo(() => {
@@ -232,6 +289,13 @@ export default function App() {
         onChange={setForm}
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
+        onBillToEnter={() => {
+          setSidebarOpen(false);
+          setTimeout(() => {
+            focusField('productSearch');
+            setShowDropdown(true);
+          }, 50);
+        }}
       />
 
       <div className="flex-1 min-w-0 p-2.5 transition-all duration-300 ease-in-out w-full min-h-screen md:h-screen flex flex-col overflow-y-auto md:overflow-hidden bg-panel-bg">
@@ -337,6 +401,93 @@ export default function App() {
           />
         </div>
       </div>
+
+      {showHelp && (
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+          onClick={() => setShowHelp(false)}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="help-title"
+        >
+          <div 
+            className="w-full max-w-md bg-panel-bg text-text-main border border-border-sec rounded-lg shadow-2xl p-5 relative"
+            onClick={e => e.stopPropagation()}
+          >
+            <button 
+              className="absolute top-3 right-3 p-1 rounded-md text-text-mute hover:bg-app-bg hover:text-text-main transition-colors cursor-pointer"
+              onClick={() => setShowHelp(false)}
+              aria-label="Close keyboard shortcuts"
+            >
+              <X size={16} />
+            </button>
+            
+            <h2 id="help-title" className="text-app-lg font-bold text-text-acc mb-3 flex items-center gap-2 border-b border-border-main pb-2">
+              ⌨️ Keyboard Shortcuts Help
+            </h2>
+            
+            <div className="space-y-2 text-app-sm max-h-[350px] overflow-y-auto pr-1">
+              <div className="flex justify-between items-center border-b border-border-main/50 py-1.5">
+                <span className="font-semibold text-text-sec">Show / Hide Shortcuts</span>
+                <kbd className="bg-app-bg border border-border-sec rounded px-1.5 py-0.5 font-mono text-app-xs font-bold text-text-acc">F1</kbd>
+              </div>
+              <div className="flex justify-between items-center border-b border-border-main/50 py-1.5">
+                <span className="font-semibold text-text-sec">Toggle Customer Sidebar</span>
+                <kbd className="bg-app-bg border border-border-sec rounded px-1.5 py-0.5 font-mono text-app-xs font-bold">Ctrl + B</kbd>
+              </div>
+              <div className="flex justify-between items-center border-b border-border-main/50 py-1.5">
+                <span className="font-semibold text-text-sec">Toggle Summary Footer</span>
+                <kbd className="bg-app-bg border border-border-sec rounded px-1.5 py-0.5 font-mono text-app-xs font-bold">Ctrl + M</kbd>
+              </div>
+              <div className="flex justify-between items-center border-b border-border-main/50 py-1.5">
+                <span className="font-semibold text-text-sec">Focus Product Search</span>
+                <kbd className="bg-app-bg border border-border-sec rounded px-1.5 py-0.5 font-mono text-app-xs font-bold">Ctrl + F</kbd>
+              </div>
+              <div className="flex justify-between items-center border-b border-border-main/50 py-1.5">
+                <span className="font-semibold text-text-sec">Focus Table Grid</span>
+                <kbd className="bg-app-bg border border-border-sec rounded px-1.5 py-0.5 font-mono text-app-xs font-bold">Ctrl + K</kbd>
+              </div>
+              <div className="flex justify-between items-center border-b border-border-main/50 py-1.5">
+                <span className="font-semibold text-text-sec">Focus Summary Footer</span>
+                <kbd className="bg-app-bg border border-border-sec rounded px-1.5 py-0.5 font-mono text-app-xs font-bold">Ctrl + G / J</kbd>
+              </div>
+              <div className="flex justify-between items-center border-b border-border-main/50 py-1.5">
+                <span className="font-semibold text-text-sec">Field Traversal</span>
+                <kbd className="bg-app-bg border border-border-sec rounded px-1.5 py-0.5 font-mono text-app-xs font-bold">Enter / Shift+Enter</kbd>
+              </div>
+              <div className="flex justify-between items-center border-b border-border-main/50 py-1.5">
+                <span className="font-semibold text-text-sec">Grid Navigation</span>
+                <kbd className="bg-app-bg border border-border-sec rounded px-1.5 py-0.5 font-mono text-app-xs font-bold">Arrow Keys</kbd>
+              </div>
+              <div className="flex justify-between items-center border-b border-border-main/50 py-1.5">
+                <span className="font-semibold text-text-sec">Edit Active Table Row</span>
+                <kbd className="bg-app-bg border border-border-sec rounded px-1.5 py-0.5 font-mono text-app-xs font-bold">Enter (on cell)</kbd>
+              </div>
+              <div className="flex justify-between items-center border-b border-border-main/50 py-1.5">
+                <span className="font-semibold text-text-sec">Save / Cancel Edit</span>
+                <kbd className="bg-app-bg border border-border-sec rounded px-1.5 py-0.5 font-mono text-app-xs font-bold">Enter / Escape</kbd>
+              </div>
+              <div className="flex justify-between items-center py-1.5">
+                <span className="font-semibold text-text-sec">Sequential Layer Close</span>
+                <kbd className="bg-app-bg border border-border-sec rounded px-1.5 py-0.5 font-mono text-app-xs font-bold">Escape</kbd>
+              </div>
+            </div>
+            
+            <div className="mt-4 pt-2 border-t border-border-main text-[11px] text-text-mute text-center font-medium">
+              Press <span className="font-bold text-text-acc">Escape</span> at any time to close help
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
+
+export default function App() {
+  return (
+    <KeyboardRegistryProvider>
+      <AppContent />
+    </KeyboardRegistryProvider>
+  );
+}
+
