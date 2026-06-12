@@ -30,6 +30,9 @@ export function handleEnterTraversal(e: React.KeyboardEvent<HTMLElement>, contai
   }
 
   if (e.key === 'Enter') {
+    if (target.tagName === 'BUTTON' && !e.shiftKey) {
+      return;
+    }
     e.preventDefault();
     const elements = getFocusableElements(container);
     const index = elements.indexOf(target);

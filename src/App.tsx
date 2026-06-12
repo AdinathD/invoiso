@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { ShoppingBag, X } from 'lucide-react';
 import { MasterHeader, InvoiceSidebar } from './sidebar';
 import type { MasterForm } from './sidebar';
@@ -7,7 +7,6 @@ import type { Product } from './AddProductForm';
 import { ProductListTable } from './ProductListTable';
 import type { TableItem } from './ProductListTable';
 import { SummaryFooter } from './SummaryFooter';
-import { KeyboardRegistryProvider, useKeyboardRegistry } from './KeyboardRegistryContext';
 
 // In-Memory Database for demonstration
 const SAMPLE_PRODUCTS: Product[] = [
@@ -19,24 +18,22 @@ const SAMPLE_PRODUCTS: Product[] = [
   { id: '6', name: ' SALT PRO VACUUM EVAPORATED [1 KG]', hsn: '25010022', priceWithGst: 28.00, gstPercent: 0, uom: 'PCS', stockLabel: 'BOX(2.00) PCS(50.00)', defaultWeight: 1.00 }];
 
 const INITIAL_FORM: MasterForm = {
-  name: 'adi',
-  mobileNo: '20121222121',
-  remarks: 'Remarks',
+  name: '',
+  mobileNo: '',
+  remarks: '',
   invoiceNo: 'NHW-2627-0001',
   invoiceDate: new Date().toISOString().split('T')[0],
-  balance: '0 DR',
-  pan: 'ABCDE1234F',
-  gst: '27ABCDE1234F1Z5',
+  balance: '',
+  pan: '',
+  gst: '',
   gstType: 'CGST/SGST',
-  city: 'Mumbai',
-  state: 'Maharashtra',
-  country: 'India',
-  billTo: 'ABC General Stores'
+  city: '',
+  state: '',
+  country: '',
+  billTo: ''
 };
 
-function AppContent() {
-  const { focusField } = useKeyboardRegistry();
-
+export default function App() {
   // Master form state
   const [form, setForm] = useState<MasterForm>(INITIAL_FORM);
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -71,32 +68,71 @@ function AppContent() {
   const [roundOff, setRoundOff] = useState('0.00');
   const [showSummary, setShowSummary] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  const handleEraseAll = () => {
+    if (window.confirm("Are you sure you want to erase all data from the screen?")) {
+      setItems([]);
+      setForm({
+        name: '',
+        mobileNo: '',
+        remarks: '',
+        invoiceNo: 'NHW-2627-0001',
+        invoiceDate: new Date().toISOString().split('T')[0],
+        balance: '',
+        pan: '',
+        gst: '',
+        gstType: 'CGST/SGST',
+        city: '',
+        state: '',
+        country: '',
+        billTo: ''
+      });
+      setHamali('0.00');
+      setFreight('0.00');
+      setDiscPercent('0.00');
+      setSalesman('-- Select --');
+      setVehicleNo('');
+      setTransport('');
+      setCreditBill(false);
+      setNote('');
+      setSalesNotes('Enter sales notes here...');
+      setRoundOff('0.00');
+    }
+  };
 
   useEffect(() => {
     const handleGlobalKeyDown = (e: KeyboardEvent) => {
+      if (e.altKey && e.key.toLowerCase() === 'e') {
+        e.preventDefault();
+        handleEraseAll();
+      }
       if (e.ctrlKey && e.key.toLowerCase() === 'b') {
         e.preventDefault();
         setSidebarOpen(prev => !prev);
       }
-      if (e.ctrlKey && e.key.toLowerCase() === 'm') {
+      if (e.ctrlKey && (e.key.toLowerCase() === 'f' || e.key.toLowerCase() === 'p')) {
         e.preventDefault();
-        setShowSummary(prev => !prev);
-      }
-      if (e.ctrlKey && e.key.toLowerCase() === 'f') {
-        e.preventDefault();
-        focusField('productSearch');
+        searchInputRef.current?.focus();
         setShowDropdown(true);
       }
       if (e.ctrlKey && e.key.toLowerCase() === 'k') {
         e.preventDefault();
-        focusField('productTable');
+        const cell = document.querySelector('td[tabindex="0"]') as HTMLElement;
+        cell?.focus();
       }
       if (e.ctrlKey && (e.key.toLowerCase() === 'g' || e.key.toLowerCase() === 'j')) {
         e.preventDefault();
-        setShowSummary(true);
-        setTimeout(() => {
-          focusField('summaryDiscount');
-        }, 100);
+        setShowSummary(prev => {
+          const next = !prev;
+          if (next) {
+            setTimeout(() => {
+              const disc = document.getElementById('summary-discount');
+              disc?.focus();
+            }, 100);
+          }
+          return next;
+        });
       }
       if (e.key === 'F1' || (e.ctrlKey && e.key === '/')) {
         e.preventDefault();
@@ -123,7 +159,7 @@ function AppContent() {
     return () => {
       window.removeEventListener('keydown', handleGlobalKeyDown);
     };
-  }, [showDropdown, showSummary, sidebarOpen, focusField]);
+  }, [showDropdown, showSummary, sidebarOpen, handleEraseAll]);
 
   // Calculate Net Rate & Rate & Net dynamically for the active item row
   const activeCalculated = useMemo(() => {
@@ -292,7 +328,7 @@ function AppContent() {
         onBillToEnter={() => {
           setSidebarOpen(false);
           setTimeout(() => {
-            focusField('productSearch');
+            searchInputRef.current?.focus();
             setShowDropdown(true);
           }, 50);
         }}
@@ -317,8 +353,12 @@ function AppContent() {
               >
                 {darkMode ? '☀️ Light Mode' : '🌙 Dark Mode'}
               </button>
-              <button className="bg-border-acc hover:bg-action-hover text-white rounded text-app-base font-semibold flex items-center justify-center transition-all h-5 px-2 cursor-pointer">
-                + New Wholesale
+              <button
+                className="bg-alert hover:opacity-90 text-white rounded text-app-base font-semibold flex items-center justify-center transition-all h-5 px-2 cursor-pointer gap-1"
+                onClick={handleEraseAll}
+                title="Erase all data (Alt + E)"
+              >
+                🗑️ Erase Screen
               </button>
             </div>
           </div>
@@ -368,6 +408,7 @@ function AppContent() {
             setActiveGstPercent={setActiveGstPercent}
             activeCalculated={activeCalculated}
             handleAddItem={handleAddItem}
+            searchInputRef={searchInputRef}
           />
         </div>
 
@@ -403,76 +444,99 @@ function AppContent() {
       </div>
 
       {showHelp && (
-        <div 
+        <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
           onClick={() => setShowHelp(false)}
           role="dialog"
           aria-modal="true"
           aria-labelledby="help-title"
         >
-          <div 
-            className="w-full max-w-md bg-panel-bg text-text-main border border-border-sec rounded-lg shadow-2xl p-5 relative"
+          <div
+            className="w-full max-w-2xl bg-panel-bg text-text-main border border-border-sec rounded-lg shadow-2xl p-5 relative"
             onClick={e => e.stopPropagation()}
           >
-            <button 
+            <button
               className="absolute top-3 right-3 p-1 rounded-md text-text-mute hover:bg-app-bg hover:text-text-main transition-colors cursor-pointer"
               onClick={() => setShowHelp(false)}
               aria-label="Close keyboard shortcuts"
             >
               <X size={16} />
             </button>
-            
-            <h2 id="help-title" className="text-app-lg font-bold text-text-acc mb-3 flex items-center gap-2 border-b border-border-main pb-2">
+
+            <h2 id="help-title" className="text-app-lg font-bold text-text-acc mb-4 flex items-center gap-2 border-b border-border-main pb-2">
               ⌨️ Keyboard Shortcuts Help
             </h2>
-            
-            <div className="space-y-2 text-app-sm max-h-[350px] overflow-y-auto pr-1">
-              <div className="flex justify-between items-center border-b border-border-main/50 py-1.5">
-                <span className="font-semibold text-text-sec">Show / Hide Shortcuts</span>
-                <kbd className="bg-app-bg border border-border-sec rounded px-1.5 py-0.5 font-mono text-app-xs font-bold text-text-acc">F1</kbd>
+
+            <div className="text-app-base space-y-4">
+              {/* Top: 2-Column Section */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                {/* Column 1: Navigation */}
+                <div className="space-y-2 sm:border-r sm:border-border-sec/40 sm:pr-6">
+                  <h3 className="text-app-sm font-black tracking-wider uppercase text-text-mute mb-2">Navigation</h3>
+                  <div className="flex justify-between items-center border-b border-border-main/30 py-1">
+                    <span className="font-bold text-text-main">Search Product</span>
+                    <kbd className="bg-app-bg border border-border-sec rounded px-2 py-0.5 font-mono text-app-sm font-black text-text-acc">Ctrl + P / F</kbd>
+                  </div>
+                  <div className="flex justify-between items-center border-b border-border-main/30 py-1">
+                    <span className="font-bold text-text-main">Focus Grid</span>
+                    <kbd className="bg-app-bg border border-border-sec rounded px-2 py-0.5 font-mono text-app-sm font-black">Ctrl + K</kbd>
+                  </div>
+                  <div className="flex justify-between items-center py-1">
+                    <span className="font-bold text-text-main">Toggle Sidebar</span>
+                    <kbd className="bg-app-bg border border-border-sec rounded px-2 py-0.5 font-mono text-app-sm font-black">Ctrl + B</kbd>
+                  </div>
+                </div>
+
+                {/* Column 2: Invoice */}
+                <div className="space-y-2">
+                  <h3 className="text-app-sm font-black tracking-wider uppercase text-text-mute mb-2">Invoice</h3>
+                  <div className="flex justify-between items-center border-b border-border-main/30 py-1">
+                    <span className="font-bold text-alert">Clear Screen</span>
+                    <kbd className="bg-app-bg border border-border-sec rounded px-2 py-0.5 font-mono text-app-sm font-black text-alert">Alt + E</kbd>
+                  </div>
+                  <div className="flex justify-between items-center border-b border-border-main/30 py-1">
+                    <span className="font-bold text-text-main">Summary</span>
+                    <kbd className="bg-app-bg border border-border-sec rounded px-2 py-0.5 font-mono text-app-sm font-black">Ctrl + G / J</kbd>
+                  </div>
+                  <div className="flex justify-between items-center py-1">
+                    <span className="font-bold text-text-main">Help Menu</span>
+                    <kbd className="bg-app-bg border border-border-sec rounded px-2 py-0.5 font-mono text-app-sm font-black text-text-acc">F1</kbd>
+                  </div>
+                </div>
               </div>
-              <div className="flex justify-between items-center border-b border-border-main/50 py-1.5">
-                <span className="font-semibold text-text-sec">Toggle Customer Sidebar</span>
-                <kbd className="bg-app-bg border border-border-sec rounded px-1.5 py-0.5 font-mono text-app-xs font-bold">Ctrl + B</kbd>
-              </div>
-              <div className="flex justify-between items-center border-b border-border-main/50 py-1.5">
-                <span className="font-semibold text-text-sec">Toggle Summary Footer</span>
-                <kbd className="bg-app-bg border border-border-sec rounded px-1.5 py-0.5 font-mono text-app-xs font-bold">Ctrl + M</kbd>
-              </div>
-              <div className="flex justify-between items-center border-b border-border-main/50 py-1.5">
-                <span className="font-semibold text-text-sec">Focus Product Search</span>
-                <kbd className="bg-app-bg border border-border-sec rounded px-1.5 py-0.5 font-mono text-app-xs font-bold">Ctrl + F</kbd>
-              </div>
-              <div className="flex justify-between items-center border-b border-border-main/50 py-1.5">
-                <span className="font-semibold text-text-sec">Focus Table Grid</span>
-                <kbd className="bg-app-bg border border-border-sec rounded px-1.5 py-0.5 font-mono text-app-xs font-bold">Ctrl + K</kbd>
-              </div>
-              <div className="flex justify-between items-center border-b border-border-main/50 py-1.5">
-                <span className="font-semibold text-text-sec">Focus Summary Footer</span>
-                <kbd className="bg-app-bg border border-border-sec rounded px-1.5 py-0.5 font-mono text-app-xs font-bold">Ctrl + G / J</kbd>
-              </div>
-              <div className="flex justify-between items-center border-b border-border-main/50 py-1.5">
-                <span className="font-semibold text-text-sec">Field Traversal</span>
-                <kbd className="bg-app-bg border border-border-sec rounded px-1.5 py-0.5 font-mono text-app-xs font-bold">Enter / Shift+Enter</kbd>
-              </div>
-              <div className="flex justify-between items-center border-b border-border-main/50 py-1.5">
-                <span className="font-semibold text-text-sec">Grid Navigation</span>
-                <kbd className="bg-app-bg border border-border-sec rounded px-1.5 py-0.5 font-mono text-app-xs font-bold">Arrow Keys</kbd>
-              </div>
-              <div className="flex justify-between items-center border-b border-border-main/50 py-1.5">
-                <span className="font-semibold text-text-sec">Edit Active Table Row</span>
-                <kbd className="bg-app-bg border border-border-sec rounded px-1.5 py-0.5 font-mono text-app-xs font-bold">Enter (on cell)</kbd>
-              </div>
-              <div className="flex justify-between items-center border-b border-border-main/50 py-1.5">
-                <span className="font-semibold text-text-sec">Save / Cancel Edit</span>
-                <kbd className="bg-app-bg border border-border-sec rounded px-1.5 py-0.5 font-mono text-app-xs font-bold">Enter / Escape</kbd>
-              </div>
-              <div className="flex justify-between items-center py-1.5">
-                <span className="font-semibold text-text-sec">Sequential Layer Close</span>
-                <kbd className="bg-app-bg border border-border-sec rounded px-1.5 py-0.5 font-mono text-app-xs font-bold">Escape</kbd>
+
+              {/* Bottom: Grid Section */}
+              <div className="border-t border-border-main/60 pt-3 space-y-2">
+                <h3 className="text-app-sm font-black tracking-wider uppercase text-text-mute mb-1.5">Grid Interactions</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1.5">
+                  <div className="flex justify-between items-center border-b border-border-main/30 py-1">
+                    <span className="font-bold text-text-main">Edit Row / Cell</span>
+                    <kbd className="bg-app-bg border border-border-sec rounded px-2 py-0.5 font-mono text-app-sm font-black">Enter</kbd>
+                  </div>
+                  <div className="flex justify-between items-center border-b border-border-main/30 py-1">
+                    <span className="font-bold text-text-main">Navigate Cells</span>
+                    <kbd className="bg-app-bg border border-border-sec rounded px-2 py-0.5 font-mono text-app-sm font-black">Arrow Keys</kbd>
+                  </div>
+                  <div className="flex justify-between items-center border-b border-border-main/30 py-1">
+                    <span className="font-bold text-text-main">Previous Field</span>
+                    <kbd className="bg-app-bg border border-border-sec rounded px-2 py-0.5 font-mono text-app-sm font-black">Shift + Enter</kbd>
+                  </div>
+                  <div className="flex justify-between items-center border-b border-border-main/30 py-1">
+                    <span className="font-bold text-text-main">Save / Close Edit</span>
+                    <kbd className="bg-app-bg border border-border-sec rounded px-2 py-0.5 font-mono text-app-sm font-black">Enter / Esc</kbd>
+                  </div>
+                  <div className="flex justify-between items-center border-b border-border-main/30 sm:border-b-0 py-1">
+                    <span className="font-bold text-text-main">Delete Row</span>
+                    <kbd className="bg-app-bg border border-border-sec rounded px-2 py-0.5 font-mono text-app-sm font-black">Delete</kbd>
+                  </div>
+                  <div className="flex justify-between items-center py-1">
+                    <span className="font-bold text-text-main">Close Dialogs/Menus</span>
+                    <kbd className="bg-app-bg border border-border-sec rounded px-2 py-0.5 font-mono text-app-sm font-black">Escape</kbd>
+                  </div>
+                </div>
               </div>
             </div>
-            
+
             <div className="mt-4 pt-2 border-t border-border-main text-[11px] text-text-mute text-center font-medium">
               Press <span className="font-bold text-text-acc">Escape</span> at any time to close help
             </div>
@@ -482,12 +546,3 @@ function AppContent() {
     </div>
   );
 }
-
-export default function App() {
-  return (
-    <KeyboardRegistryProvider>
-      <AppContent />
-    </KeyboardRegistryProvider>
-  );
-}
-

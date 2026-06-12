@@ -1,6 +1,6 @@
 import React from 'react';
 import { Plus } from 'lucide-react';
-import { useKeyboardField, useKeyboardRegistry } from './KeyboardRegistryContext';
+import { handleEnterTraversal } from './keyboardUtils.ts';
 
 export interface Product {
   id: string;
@@ -33,6 +33,7 @@ interface AddProductFormProps {
   setActiveGstPercent: (val: string) => void;
   activeCalculated: { rate: string; netRate: string; net: string };
   handleAddItem: () => void;
+  searchInputRef: React.RefObject<HTMLInputElement | null>;
 }
 
 export const AddProductForm: React.FC<AddProductFormProps> = ({
@@ -55,10 +56,11 @@ export const AddProductForm: React.FC<AddProductFormProps> = ({
   setActiveGstPercent,
   activeCalculated,
   handleAddItem,
+  searchInputRef,
 }) => {
   const [activeIdx, setActiveIdx] = React.useState(-1);
+  const containerRef = React.useRef<HTMLDivElement>(null);
   const dropdownRef = React.useRef<HTMLDivElement>(null);
-  const { handleGroupTraversal, focusField } = useKeyboardRegistry();
 
   const filteredProducts = React.useMemo(() => {
     if (!activeSearch) return products;
@@ -71,65 +73,10 @@ export const AddProductForm: React.FC<AddProductFormProps> = ({
     setActiveIdx(-1);
   }, [activeSearch, showDropdown]);
 
-  // Field registrations
-  const searchInputRef = useKeyboardField({
-    id: 'productSearch',
-    group: 'addProductForm',
-    onEnter: () => {
-      if (showDropdown && activeIdx >= 0 && activeIdx < filteredProducts.length) {
-        handleSelectProduct(filteredProducts[activeIdx]);
-        setActiveIdx(-1);
-        focusField('qty');
-        return true; // prevent default group traversal
-      }
-    }
-  });
-
-  const qtyRef = useKeyboardField({
-    id: 'qty',
-    group: 'addProductForm'
-  });
-
-  const uomRef = useKeyboardField({
-    id: 'uom',
-    group: 'addProductForm'
-  });
-
-  const priceRef = useKeyboardField({
-    id: 'price',
-    group: 'addProductForm'
-  });
-
-  const weightRef = useKeyboardField({
-    id: 'weight',
-    group: 'addProductForm'
-  });
-
-  const gstRef = useKeyboardField({
-    id: 'gst',
-    group: 'addProductForm',
-    onEnter: (e) => {
-      if (!e.shiftKey) {
-        handleAddItem();
-        focusField('productSearch');
-        return true; // prevent default group traversal
-      }
-    }
-  });
-
-  const addBtnRef = useKeyboardField({
-    id: 'addButton',
-    group: 'addProductForm',
-    onEnter: (e) => {
-      if (!e.shiftKey) {
-        handleAddItem();
-        focusField('productSearch');
-        return true; // prevent default group traversal
-      }
-    }
-  });
-
   const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    const target = e.target as HTMLElement;
+    const isSearchInput = target instanceof HTMLInputElement && target.placeholder === "Search / select item...";
+
     if (e.key === 'Escape') {
       if (showDropdown) {
         e.stopPropagation();
@@ -138,35 +85,64 @@ export const AddProductForm: React.FC<AddProductFormProps> = ({
       return;
     }
 
-    // Call standard Enter/Shift+Enter traversal using the registry group
-    handleGroupTraversal(e, 'addProductForm');
-  };
+    if (isSearchInput) {
+      if (e.key === 'ArrowDown' && showDropdown && filteredProducts.length > 0) {
+        e.preventDefault();
+        setActiveIdx(prev => {
+          const next = prev + 1 >= filteredProducts.length ? 0 : prev + 1;
+          const itemEl = dropdownRef.current?.children[next] as HTMLElement;
+          itemEl?.scrollIntoView({ block: 'nearest' });
+          return next;
+        });
+        return;
+      }
+      if (e.key === 'ArrowUp' && showDropdown && filteredProducts.length > 0) {
+        e.preventDefault();
+        setActiveIdx(prev => {
+          const next = prev - 1 < 0 ? filteredProducts.length - 1 : prev - 1;
+          const itemEl = dropdownRef.current?.children[next] as HTMLElement;
+          itemEl?.scrollIntoView({ block: 'nearest' });
+          return next;
+        });
+        return;
+      }
+      if (e.key === 'Enter') {
+        if (showDropdown && activeIdx >= 0 && activeIdx < filteredProducts.length) {
+          e.preventDefault();
+          handleSelectProduct(filteredProducts[activeIdx]);
+          setActiveIdx(-1);
+          // Focus the Qty field next for faster flow
+          setTimeout(() => {
+            const qtyInput = containerRef.current?.querySelector('input[type="number"]') as HTMLInputElement;
+            qtyInput?.focus();
+          }, 0);
+          return;
+        }
+      }
+    }
 
-  const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'ArrowDown' && showDropdown && filteredProducts.length > 0) {
-      e.preventDefault();
-      setActiveIdx(prev => {
-        const next = prev + 1 >= filteredProducts.length ? 0 : prev + 1;
-        const itemEl = dropdownRef.current?.children[next] as HTMLElement;
-        itemEl?.scrollIntoView({ block: 'nearest' });
-        return next;
-      });
-      return;
+    // Enter on the add button or last input (the select for GST percent)
+    if (e.key === 'Enter' && !e.shiftKey) {
+      const isGstSelect = target instanceof HTMLSelectElement && target.value !== undefined && target.parentElement?.innerHTML.includes("GST %");
+      const isAddButton = target.tagName === 'BUTTON' && target.title === "Add Item to table";
+      if (isGstSelect || isAddButton) {
+        e.preventDefault();
+        handleAddItem();
+        // Explicitly focus back on Product Search
+        setTimeout(() => {
+          searchInputRef.current?.focus();
+        }, 0);
+        return;
+      }
     }
-    if (e.key === 'ArrowUp' && showDropdown && filteredProducts.length > 0) {
-      e.preventDefault();
-      setActiveIdx(prev => {
-        const next = prev - 1 < 0 ? filteredProducts.length - 1 : prev - 1;
-        const itemEl = dropdownRef.current?.children[next] as HTMLElement;
-        itemEl?.scrollIntoView({ block: 'nearest' });
-        return next;
-      });
-      return;
-    }
+
+    // Call standard Enter/Shift+Enter traversal
+    handleEnterTraversal(e, containerRef.current);
   };
 
   return (
-    <div 
+    <div
+      ref={containerRef}
       onKeyDown={handleKeyDown}
       className="border border-border-acc/20 rounded p-1 mb-1 transition-all duration-300 shadow-sm bg-panel-bg text-text-main"
     >
@@ -191,10 +167,9 @@ export const AddProductForm: React.FC<AddProductFormProps> = ({
               setShowDropdown(true);
             }}
             onFocus={() => setShowDropdown(true)}
-            onKeyDown={handleSearchKeyDown}
           />
           {showDropdown && filteredProducts.length > 0 && (
-            <div 
+            <div
               id="product-dropdown-list"
               role="listbox"
               ref={dropdownRef}
@@ -210,7 +185,10 @@ export const AddProductForm: React.FC<AddProductFormProps> = ({
                   onClick={() => {
                     handleSelectProduct(p);
                     setActiveIdx(-1);
-                    focusField('qty');
+                    setTimeout(() => {
+                      const qtyInput = containerRef.current?.querySelector('input[type="number"]') as HTMLInputElement;
+                      qtyInput?.focus();
+                    }, 0);
                   }}
                 >
                   <div className="font-extrabold text-text-main">{p.name}</div>
@@ -227,7 +205,6 @@ export const AddProductForm: React.FC<AddProductFormProps> = ({
         <div className="col-span-6 sm:col-span-4 md:col-span-1 flex flex-col gap-0.5">
           <label className="text-app-sm font-bold text-text-sec block text-right pr-0.5">Qty</label>
           <input
-            ref={qtyRef}
             type="number"
             step="0.01"
             className="border border-inp-border bg-inp-bg text-inp-text rounded px-1 py-0.1 text-app-base h-[26px] w-full focus:outline-none text-right font-semibold focus:ring-1 focus:ring-border-acc"
@@ -241,7 +218,6 @@ export const AddProductForm: React.FC<AddProductFormProps> = ({
         <div className="col-span-6 sm:col-span-4 md:col-span-1 flex flex-col gap-0.5">
           <label className="text-app-sm font-bold text-text-sec block text-center">UOM</label>
           <input
-            ref={uomRef}
             type="text"
             className="border border-inp-border bg-inp-bg text-inp-text rounded px-1 py-0.1 text-app-base h-[26px] w-full focus:outline-none text-center font-semibold focus:ring-1 focus:ring-border-acc"
             value={activeUOM}
@@ -254,7 +230,6 @@ export const AddProductForm: React.FC<AddProductFormProps> = ({
         <div className="col-span-6 sm:col-span-4 md:col-span-1 flex flex-col gap-0.5">
           <label className="text-app-sm font-bold text-text-sec block text-right pr-0.5">Price (+GST)</label>
           <input
-            ref={priceRef}
             type="number"
             step="0.01"
             className="border border-inp-border bg-inp-bg text-inp-text rounded px-1 py-0.1 text-app-base h-[26px] w-full focus:outline-none text-right font-semibold focus:ring-1 focus:ring-border-acc"
@@ -268,7 +243,6 @@ export const AddProductForm: React.FC<AddProductFormProps> = ({
         <div className="col-span-6 sm:col-span-4 md:col-span-1 flex flex-col gap-0.5">
           <label className="text-app-sm font-bold text-text-sec block text-right pr-0.5">Weight</label>
           <input
-            ref={weightRef}
             type="number"
             step="0.01"
             className="border border-inp-border bg-inp-bg text-inp-text rounded px-1 py-0.1 text-app-base h-[26px] w-full focus:outline-none text-right font-semibold focus:ring-1 focus:ring-border-acc"
@@ -306,7 +280,6 @@ export const AddProductForm: React.FC<AddProductFormProps> = ({
         <div className="col-span-6 sm:col-span-4 md:col-span-1 flex flex-col gap-0.5">
           <label className="text-app-sm font-bold text-text-sec block text-center">GST %</label>
           <select
-            ref={gstRef}
             className="border border-inp-border bg-inp-bg text-inp-text rounded px-1 py-0.1 text-app-base h-[26px] w-full focus:outline-none font-semibold cursor-pointer focus:ring-1 focus:ring-border-acc"
             value={activeGstPercent}
             onChange={(e) => setActiveGstPercent(e.target.value)}
@@ -334,7 +307,6 @@ export const AddProductForm: React.FC<AddProductFormProps> = ({
         {/* Action Button - Icon Only */}
         <div className="col-span-12 sm:col-span-4 md:col-span-1">
           <button
-            ref={addBtnRef}
             className="bg-border-acc hover:bg-action-hover active:scale-95 text-white rounded text-app-base font-bold cursor-pointer flex items-center justify-center transition-all h-[26px] w-full shadow-sm"
             onClick={handleAddItem}
             title="Add Item to table"
