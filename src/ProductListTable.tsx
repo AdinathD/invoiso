@@ -1,5 +1,25 @@
 import React from 'react';
-import { Trash2, Edit, Save } from 'lucide-react';
+import { Trash2, Edit, Save, Settings } from 'lucide-react';
+
+export interface ColumnConfig {
+  showHSN: boolean;
+  showUOM: boolean;
+  showPrice: boolean;
+  showNetWeight: boolean;
+  showNetRate: boolean;
+  showRate: boolean;
+  showGST: boolean;
+}
+
+export const DEFAULT_CONFIG: ColumnConfig = {
+  showHSN: true,
+  showUOM: true,
+  showPrice: true,
+  showNetWeight: true,
+  showNetRate: true,
+  showRate: true,
+  showGST: true,
+};
 
 export interface TableItem {
   srNo: number;
@@ -22,6 +42,7 @@ interface ProductListTableProps {
   editingSrNo: number | null;
   setEditingSrNo: (srNo: number | null) => void;
   handleDeleteItem: (srNo: number) => void;
+  columnConfig: ColumnConfig;
 }
 
 export const ProductListTable: React.FC<ProductListTableProps> = ({
@@ -30,8 +51,28 @@ export const ProductListTable: React.FC<ProductListTableProps> = ({
   editingSrNo,
   setEditingSrNo,
   handleDeleteItem,
+  columnConfig
 }) => {
   const [focusedCell, setFocusedCell] = React.useState<{ rowIndex: number; colIndex: number } | null>(null);
+  const [flashingSrNo, setFlashingSrNo] = React.useState<number | null>(null);
+  const prevSrNosRef = React.useRef<Set<number>>(new Set(items.map((item) => item.srNo)));
+
+  React.useEffect(() => {
+    const currentSrNos = new Set(items.map((item) => item.srNo));
+    const addedSrNo = items.find((item) => !prevSrNosRef.current.has(item.srNo))?.srNo;
+    if (addedSrNo !== undefined) {
+      setFlashingSrNo(addedSrNo);
+      const timer = setTimeout(() => {
+        setFlashingSrNo(null);
+      }, 850);
+      prevSrNosRef.current = currentSrNos;
+      return () => {
+        clearTimeout(timer);
+        setFlashingSrNo(null);
+      };
+    }
+    prevSrNosRef.current = currentSrNos;
+  }, [items]);
 
   const getTabIndex = (rowIndex: number, colIndex: number) => {
     if (!focusedCell) {
@@ -71,7 +112,14 @@ export const ProductListTable: React.FC<ProductListTableProps> = ({
     let nextRow = rowIndex;
     let nextCol = colIndex;
     const numRows = items.length;
-    const numCols = 12; // 12 columns total
+    const numCols = 5 + 
+      (columnConfig.showHSN ? 1 : 0) +
+      (columnConfig.showUOM ? 1 : 0) +
+      (columnConfig.showPrice ? 1 : 0) +
+      (columnConfig.showNetWeight ? 1 : 0) +
+      (columnConfig.showNetRate ? 1 : 0) +
+      (columnConfig.showRate ? 1 : 0) +
+      (columnConfig.showGST ? 1 : 0);
 
     if (e.key === 'ArrowUp' && !isInput) {
       e.preventDefault();
@@ -146,345 +194,240 @@ export const ProductListTable: React.FC<ProductListTableProps> = ({
     setItems(updatedItems);
   };
 
+  const visibleOptionalCount = Object.values(columnConfig).filter(Boolean).length;
+
+  const headers = [
+    { key: 'srNo', className: "w-[35px] text-center p-1 border-r border-border-sec sticky top-0 bg-app-bg z-10", label: "Sr." },
+    { 
+      key: 'name', 
+      className: `${
+        visibleOptionalCount === 0 ? 'w-[55%]' :
+        visibleOptionalCount <= 2 ? 'w-[45%]' :
+        visibleOptionalCount <= 4 ? 'w-[38%]' :
+        'w-[30%]'
+      } p-1 border-r border-border-sec sticky top-0 bg-app-bg z-10 transition-all duration-150`, 
+      label: "Product Name" 
+    },
+    columnConfig.showHSN && { key: 'hsn', className: "p-1 border-r border-border-sec sticky top-0 bg-app-bg z-10", label: "HSN" },
+    { key: 'quantity', className: "text-right p-1 border-r border-border-sec sticky top-0 bg-app-bg z-10", label: "Quantity" },
+    columnConfig.showUOM && { key: 'uom', className: "text-center p-1 border-r border-border-sec sticky top-0 bg-app-bg z-10", label: "UOM" },
+    columnConfig.showPrice && { key: 'price', className: "text-right p-1 border-r border-border-sec sticky top-0 bg-app-bg z-10", label: "Price (with GST)" },
+    columnConfig.showNetWeight && { key: 'netWt', className: "text-right p-1 border-r border-border-sec sticky top-0 bg-app-bg z-10", label: "Net Wt." },
+    columnConfig.showNetRate && { key: 'netRate', className: "text-right p-1 border-r border-border-sec sticky top-0 bg-app-bg z-10", label: "Net Rate" },
+    columnConfig.showRate && { key: 'rate', className: "text-right p-1 border-r border-border-sec sticky top-0 bg-app-bg z-10", label: "Rate" },
+    columnConfig.showGST && { key: 'gstPercent', className: "text-right p-1 border-r border-border-sec sticky top-0 bg-app-bg z-10", label: "GST %" },
+    { key: 'net', className: "text-right p-1 border-r border-border-sec font-bold sticky top-0 bg-app-bg z-10", label: "Net (Total)" },
+    { key: 'actions', className: "w-[60px] text-center p-1 sticky top-0 bg-app-bg z-10", label: "Actions" }
+  ].filter((c): c is Exclude<typeof c, boolean | undefined | null | false> => !!c);
+
   return (
     <div
       className="overflow-auto border border-border-main bg-panel-bg rounded mb-1.5 transition-colors duration-150 h-full"
     >
-      <table className="w-full min-w-[900px] lg:min-w-full border-collapse text-left" role="grid" aria-colcount={12} aria-rowcount={items.length + 1}>
-        <thead>
-          <tr
-            className="font-bold text-table-header border-b bg-app-bg text-text-main border-border-sec"
-          >
-            <th className="w-[35px] text-center p-1 border-r border-border-sec sticky top-0 bg-app-bg z-10" role="columnheader">
-              Sr.
-            </th>
-            <th className="w-[30%] p-1 border-r border-border-sec sticky top-0 bg-app-bg z-10" role="columnheader">
-              Product Name
-            </th>
-            <th className="p-1 border-r border-border-sec sticky top-0 bg-app-bg z-10" role="columnheader">
-              HSN
-            </th>
-            <th className="text-right p-1 border-r border-border-sec sticky top-0 bg-app-bg z-10" role="columnheader">
-              Quantity
-            </th>
-            <th className="text-center p-1 border-r border-border-sec sticky top-0 bg-app-bg z-10" role="columnheader">
-              UOM
-            </th>
-            <th className="text-right p-1 border-r border-border-sec sticky top-0 bg-app-bg z-10" role="columnheader">
-              Price (with GST)
-            </th>
-            <th className="text-right p-1 border-r border-border-sec sticky top-0 bg-app-bg z-10" role="columnheader">
-              Net Wt.
-            </th>
-            <th className="text-right p-1 border-r border-border-sec sticky top-0 bg-app-bg z-10" role="columnheader">
-              Net Rate
-            </th>
-            <th className="text-right p-1 border-r border-border-sec sticky top-0 bg-app-bg z-10" role="columnheader">
-              Rate
-            </th>
-            <th className="text-right p-1 border-r border-border-sec sticky top-0 bg-app-bg z-10" role="columnheader">
-              GST %
-            </th>
-            <th className="text-right p-1 border-r border-border-sec font-bold sticky top-0 bg-app-bg z-10" role="columnheader">
-              Net (Total)
-            </th>
-            <th className="w-[60px] text-center p-1 sticky top-0 bg-app-bg z-10" role="columnheader">
-              Actions
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          {items.map((item, idx) => {
-            const isEditing = editingSrNo === item.srNo;
-            return (
-              <tr
-                key={item.srNo}
-                role="row"
-                className="border-b text-table-body font-medium transition-colors duration-150 hover:bg-app-bg/50 border-border-sec text-text-main odd:bg-panel-bg even:bg-app-bg/25"
-              >
-                {/* SR NO */}
-                <td
-                  className="w-[35px] text-center p-1 border-r border-border-sec"
-                  role="gridcell"
-                  tabIndex={getTabIndex(idx, 0)}
-                  data-row={idx}
-                  data-col={0}
-                  onKeyDown={(e) => handleCellKeyDown(e, idx, 0)}
-                  onFocus={() => setFocusedCell({ rowIndex: idx, colIndex: 0 })}
-                >
-                  {item.srNo}
-                </td>
-
-                {/* PRODUCT NAME */}
-                <td
-                  className="p-1 border-r border-border-sec"
-                  role="gridcell"
-                  tabIndex={getTabIndex(idx, 1)}
-                  data-row={idx}
-                  data-col={1}
-                  onKeyDown={(e) => handleCellKeyDown(e, idx, 1)}
-                  onFocus={() => setFocusedCell({ rowIndex: idx, colIndex: 1 })}
-                >
-                  {isEditing ? (
+      <table className="w-full min-w-[900px] lg:min-w-full border-collapse text-left" role="grid" aria-colcount={headers.length} aria-rowcount={items.length + 1}>
+          <thead>
+            <tr
+              className="font-bold text-table-header border-b bg-app-bg text-text-main border-border-sec"
+            >
+              {headers.map((h) => (
+                <th key={h.key} className={h.className} role="columnheader">
+                  {h.label}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {items.map((item, idx) => {
+              const isEditing = editingSrNo === item.srNo;
+              const isFlashing = flashingSrNo === item.srNo;
+              
+              const rowCells = [
+                {
+                  key: 'srNo',
+                  className: "w-[35px] text-center p-1 border-r border-border-sec",
+                  render: () => item.srNo
+                },
+                {
+                  key: 'name',
+                  className: "p-1 border-r border-border-sec",
+                  render: () => isEditing ? (
                     <input
                       type="text"
                       className="border border-inp-border rounded px-1 py-0.5 text-table-body bg-inp-bg text-inp-text h-5 w-full focus:outline-none"
                       value={item.name}
-                      onChange={(e) =>
-                        updateItem(item.srNo, 'name', e.target.value)
-                      }
+                      onChange={(e) => updateItem(item.srNo, 'name', e.target.value)}
                     />
                   ) : (
                     <span className="font-medium">{item.name}</span>
-                  )}
-                </td>
-
-                {/* HSN */}
-                <td
-                  className="p-1 border-r border-border-sec"
-                  role="gridcell"
-                  tabIndex={getTabIndex(idx, 2)}
-                  data-row={idx}
-                  data-col={2}
-                  onKeyDown={(e) => handleCellKeyDown(e, idx, 2)}
-                  onFocus={() => setFocusedCell({ rowIndex: idx, colIndex: 2 })}
-                >
-                  {isEditing ? (
+                  )
+                },
+                columnConfig.showHSN && {
+                  key: 'hsn',
+                  className: "p-1 border-r border-border-sec",
+                  render: () => isEditing ? (
                     <input
                       type="text"
                       className="border border-inp-border rounded px-1 py-0.5 text-table-body bg-inp-bg text-inp-text h-5 w-full focus:outline-none"
                       value={item.hsn}
-                      onChange={(e) =>
-                        updateItem(item.srNo, 'hsn', e.target.value)
-                      }
+                      onChange={(e) => updateItem(item.srNo, 'hsn', e.target.value)}
                     />
                   ) : (
                     <span>{item.hsn}</span>
-                  )}
-                </td>
-
-                {/* QUANTITY */}
-                <td
-                  className="text-right p-1 border-r border-border-sec"
-                  role="gridcell"
-                  tabIndex={getTabIndex(idx, 3)}
-                  data-row={idx}
-                  data-col={3}
-                  onKeyDown={(e) => handleCellKeyDown(e, idx, 3)}
-                  onFocus={() => setFocusedCell({ rowIndex: idx, colIndex: 3 })}
-                >
-                  {isEditing ? (
+                  )
+                },
+                {
+                  key: 'quantity',
+                  className: "text-right p-1 border-r border-border-sec",
+                  render: () => isEditing ? (
                     <input
                       type="number"
                       step="0.01"
                       className="border border-inp-border rounded px-1 py-0.5 text-table-body bg-inp-bg text-inp-text h-5 w-full focus:outline-none text-right"
                       value={item.quantity}
-                      onChange={(e) =>
-                        updateItem(
-                          item.srNo,
-                          'quantity',
-                          parseFloat(e.target.value) || 0
-                        )
-                      }
+                      onChange={(e) => updateItem(item.srNo, 'quantity', parseFloat(e.target.value) || 0)}
                     />
                   ) : (
                     <span>{item.quantity.toFixed(2)}</span>
-                  )}
-                </td>
-
-                {/* UOM */}
-                <td
-                  className="text-center p-1 border-r border-border-sec"
-                  role="gridcell"
-                  tabIndex={getTabIndex(idx, 4)}
-                  data-row={idx}
-                  data-col={4}
-                  onKeyDown={(e) => handleCellKeyDown(e, idx, 4)}
-                  onFocus={() => setFocusedCell({ rowIndex: idx, colIndex: 4 })}
-                >
-                  {isEditing ? (
+                  )
+                },
+                columnConfig.showUOM && {
+                  key: 'uom',
+                  className: "text-center p-1 border-r border-border-sec",
+                  render: () => isEditing ? (
                     <input
                       type="text"
                       className="border border-inp-border rounded px-1 py-0.5 text-table-body bg-inp-bg text-inp-text h-5 w-full focus:outline-none text-center"
                       value={item.uom}
-                      onChange={(e) =>
-                        updateItem(item.srNo, 'uom', e.target.value)
-                      }
+                      onChange={(e) => updateItem(item.srNo, 'uom', e.target.value)}
                     />
                   ) : (
                     <span>{item.uom}</span>
-                  )}
-                </td>
-
-                {/* PRICE */}
-                <td
-                  className="text-right p-1 border-r border-border-sec"
-                  role="gridcell"
-                  tabIndex={getTabIndex(idx, 5)}
-                  data-row={idx}
-                  data-col={5}
-                  onKeyDown={(e) => handleCellKeyDown(e, idx, 5)}
-                  onFocus={() => setFocusedCell({ rowIndex: idx, colIndex: 5 })}
-                >
-                  {isEditing ? (
+                  )
+                },
+                columnConfig.showPrice && {
+                  key: 'price',
+                  className: "text-right p-1 border-r border-border-sec",
+                  render: () => isEditing ? (
                     <input
                       type="number"
                       step="0.01"
                       className="border border-inp-border rounded px-1 py-0.5 text-table-body bg-inp-bg text-inp-text h-5 w-full focus:outline-none text-right"
                       value={item.price}
-                      onChange={(e) =>
-                        updateItem(
-                          item.srNo,
-                          'price',
-                          parseFloat(e.target.value) || 0
-                        )
-                      }
+                      onChange={(e) => updateItem(item.srNo, 'price', parseFloat(e.target.value) || 0)}
                     />
                   ) : (
                     <span>{item.price.toFixed(2)}</span>
-                  )}
-                </td>
-
-                {/* NET WT */}
-                <td
-                  className="text-right p-1 border-r border-border-sec"
-                  role="gridcell"
-                  tabIndex={getTabIndex(idx, 6)}
-                  data-row={idx}
-                  data-col={6}
-                  onKeyDown={(e) => handleCellKeyDown(e, idx, 6)}
-                  onFocus={() => setFocusedCell({ rowIndex: idx, colIndex: 6 })}
-                >
-                  {isEditing ? (
+                  )
+                },
+                columnConfig.showNetWeight && {
+                  key: 'netWt',
+                  className: "text-right p-1 border-r border-border-sec",
+                  render: () => isEditing ? (
                     <input
                       type="number"
                       step="0.01"
                       className="border border-inp-border rounded px-1 py-0.5 text-table-body bg-inp-bg text-inp-text h-5 w-full focus:outline-none text-right"
                       value={item.netWt}
-                      onChange={(e) =>
-                        updateItem(
-                          item.srNo,
-                          'netWt',
-                          parseFloat(e.target.value) || 0
-                        )
-                      }
+                      onChange={(e) => updateItem(item.srNo, 'netWt', parseFloat(e.target.value) || 0)}
                     />
                   ) : (
                     <span>{item.netWt.toFixed(2)}</span>
-                  )}
-                </td>
-
-                {/* NET RATE */}
-                <td
-                  className="text-right p-1 border-r border-border-sec"
-                  role="gridcell"
-                  tabIndex={getTabIndex(idx, 7)}
-                  data-row={idx}
-                  data-col={7}
-                  onKeyDown={(e) => handleCellKeyDown(e, idx, 7)}
-                  onFocus={() => setFocusedCell({ rowIndex: idx, colIndex: 7 })}
-                >
-                  <span>{item.netRate.toFixed(2)}</span>
-                </td>
-
-                {/* RATE */}
-                <td
-                  className="text-right p-1 border-r border-border-sec"
-                  role="gridcell"
-                  tabIndex={getTabIndex(idx, 8)}
-                  data-row={idx}
-                  data-col={8}
-                  onKeyDown={(e) => handleCellKeyDown(e, idx, 8)}
-                  onFocus={() => setFocusedCell({ rowIndex: idx, colIndex: 8 })}
-                >
-                  <span>{item.rate.toFixed(2)}</span>
-                </td>
-
-                {/* GST PERCENT */}
-                <td
-                  className="text-right p-1 border-r border-border-sec"
-                  role="gridcell"
-                  tabIndex={getTabIndex(idx, 9)}
-                  data-row={idx}
-                  data-col={9}
-                  onKeyDown={(e) => handleCellKeyDown(e, idx, 9)}
-                  onFocus={() => setFocusedCell({ rowIndex: idx, colIndex: 9 })}
-                >
-                  {isEditing ? (
+                  )
+                },
+                columnConfig.showNetRate && {
+                  key: 'netRate',
+                  className: "text-right p-1 border-r border-border-sec",
+                  render: () => <span>{item.netRate.toFixed(2)}</span>
+                },
+                columnConfig.showRate && {
+                  key: 'rate',
+                  className: "text-right p-1 border-r border-border-sec",
+                  render: () => <span>{item.rate.toFixed(2)}</span>
+                },
+                columnConfig.showGST && {
+                  key: 'gstPercent',
+                  className: "text-right p-1 border-r border-border-sec",
+                  render: () => isEditing ? (
                     <input
                       type="number"
                       step="0.1"
                       className="border border-inp-border rounded px-1 py-0.5 text-table-body bg-inp-bg text-inp-text h-5 w-full focus:outline-none text-right"
                       value={item.gstPercent}
-                      onChange={(e) =>
-                        updateItem(
-                          item.srNo,
-                          'gstPercent',
-                          parseFloat(e.target.value) || 0
-                        )
-                      }
+                      onChange={(e) => updateItem(item.srNo, 'gstPercent', parseFloat(e.target.value) || 0)}
                     />
                   ) : (
                     <span>{item.gstPercent}%</span>
-                  )}
-                </td>
+                  )
+                },
+                {
+                  key: 'net',
+                  className: "text-right p-1 border-r border-border-sec font-bold",
+                  render: () => <span>{item.net.toFixed(2)}</span>
+                },
+                {
+                  key: 'actions',
+                  className: "w-[60px] text-center p-1 flex justify-center gap-1",
+                  render: () => (
+                    <>
+                      {isEditing ? (
+                        <button
+                          className="p-0.5 rounded text-text-mute hover:bg-emerald-light hover:text-text-acc cursor-pointer"
+                          onClick={() => setEditingSrNo(null)}
+                          title="Save Row"
+                          tabIndex={-1}
+                        >
+                          <Save size={12} />
+                        </button>
+                      ) : (
+                        <button
+                          className="p-0.5 rounded text-text-mute hover:bg-app-bg hover:text-text-main cursor-pointer"
+                          onClick={() => setEditingSrNo(item.srNo)}
+                          title="Edit Row"
+                          tabIndex={-1}
+                        >
+                          <Edit size={12} />
+                        </button>
+                      )}
+                      <button
+                        className="p-0.5 rounded text-text-mute hover:bg-alert/10 hover:text-alert cursor-pointer"
+                        onClick={() => handleDeleteItem(item.srNo)}
+                        title="Delete Row"
+                        tabIndex={-1}
+                      >
+                        <Trash2 size={12} />
+                      </button>
+                    </>
+                  )
+                }
+              ].filter((c): c is Exclude<typeof c, boolean | undefined | null | false> => !!c);
 
-                {/* NET TOTAL */}
-                <td
-                  className="text-right p-1 border-r border-border-sec font-bold"
-                  role="gridcell"
-                  tabIndex={getTabIndex(idx, 10)}
-                  data-row={idx}
-                  data-col={10}
-                  onKeyDown={(e) => handleCellKeyDown(e, idx, 10)}
-                  onFocus={() => setFocusedCell({ rowIndex: idx, colIndex: 10 })}
+              return (
+                <tr
+                  key={item.srNo}
+                  role="row"
+                  className={`border-b text-table-body font-medium transition-colors duration-150 hover:bg-app-bg/50 border-border-sec text-text-main odd:bg-panel-bg even:bg-app-bg/25 ${
+                    isFlashing ? 'animate-row-flash' : ''
+                  }`}
                 >
-                  <span>{item.net.toFixed(2)}</span>
-                </td>
-
-                {/* ACTIONS */}
-                <td
-                  className="w-[60px] text-center p-1 flex justify-center gap-1"
-                  role="gridcell"
-                  tabIndex={getTabIndex(idx, 11)}
-                  data-row={idx}
-                  data-col={11}
-                  onKeyDown={(e) => handleCellKeyDown(e, idx, 11)}
-                  onFocus={() => setFocusedCell({ rowIndex: idx, colIndex: 11 })}
-                >
-                  {isEditing ? (
-                    <button
-                      className="p-0.5 rounded text-text-mute hover:bg-emerald-light hover:text-text-acc cursor-pointer"
-                      onClick={() => setEditingSrNo(null)}
-                      title="Save Row"
-                      tabIndex={-1}
+                  {rowCells.map((cell, cellColIdx) => (
+                    <td
+                      key={cell.key}
+                      className={cell.className}
+                      role="gridcell"
+                      tabIndex={getTabIndex(idx, cellColIdx)}
+                      data-row={idx}
+                      data-col={cellColIdx}
+                      onKeyDown={(e) => handleCellKeyDown(e, idx, cellColIdx)}
+                      onFocus={() => setFocusedCell({ rowIndex: idx, colIndex: cellColIdx })}
                     >
-                      <Save size={12} />
-                    </button>
-                  ) : (
-                    <button
-                      className="p-0.5 rounded text-text-mute hover:bg-app-bg hover:text-text-main cursor-pointer"
-                      onClick={() => setEditingSrNo(item.srNo)}
-                      title="Edit Row"
-                      tabIndex={-1}
-                    >
-                      <Edit size={12} />
-                    </button>
-                  )}
-                  <button
-                    className="p-0.5 rounded text-text-mute hover:bg-alert/10 hover:text-alert cursor-pointer"
-                    onClick={() => handleDeleteItem(item.srNo)}
-                    title="Delete Row"
-                    tabIndex={-1}
-                  >
-                    <Trash2 size={12} />
-                  </button>
-                </td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
-    </div>
+                      {cell.render()}
+                    </td>
+                  ))}
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
   );
 };

@@ -1,6 +1,7 @@
 import React from 'react';
-import { User, Phone, Clipboard, Menu, X } from 'lucide-react';
+import { User, Phone, Clipboard, Menu, X, Settings } from 'lucide-react';
 import { handleEnterTraversal } from './keyboardUtils.ts';
+import type { ColumnConfig } from './ProductListTable';
 
 export interface MasterForm {
   name: string;
@@ -23,13 +24,36 @@ interface MasterHeaderProps {
   onChange: (updated: MasterForm) => void;
   sidebarOpen: boolean;
   onToggleSidebar: () => void;
+  columnConfig: ColumnConfig;
+  toggleColumn: (key: keyof ColumnConfig) => void;
+  resetColumnConfig: () => void;
 }
 
-export const MasterHeader: React.FC<MasterHeaderProps> = ({ form, sidebarOpen, onToggleSidebar }) => {
+export const MasterHeader: React.FC<MasterHeaderProps> = ({ 
+  form, 
+  sidebarOpen, 
+  onToggleSidebar,
+  columnConfig,
+  toggleColumn,
+  resetColumnConfig
+}) => {
+  const [dropdownOpen, setDropdownOpen] = React.useState(false);
+  const dropdownRef = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   return (
     <div className="border border-border-acc rounded p-2 mb-2 transition-colors duration-150 relative flex flex-col sm:flex-row gap-2 sm:items-center justify-between bg-panel-bg text-text-main">
 
-      {/* Left Side: Hamburger Icon & Title */}
+      {/* Left Side: Hamburger Icon & Title & Settings Dropdown */}
       <div className="flex items-center gap-3">
         {!sidebarOpen && (
           <button
@@ -44,9 +68,104 @@ export const MasterHeader: React.FC<MasterHeaderProps> = ({ form, sidebarOpen, o
         )}
 
         <div className="flex flex-col">
-          <span className="text-app-md font-bold text-text-main">
-            Add Invoice - Wholesale Credit
-          </span>
+          <div className="flex items-center gap-3">
+            <span className="text-app-md font-bold text-text-main">
+              Add Invoice - Wholesale Credit
+            </span>
+            
+            {/* Columns Config Settings Button & Popover */}
+            <div className="relative" ref={dropdownRef}>
+              <button
+                onClick={() => setDropdownOpen(!dropdownOpen)}
+                className="flex items-center gap-1 px-1.5 py-0.5 bg-app-bg hover:bg-border-sec/30 text-text-sec hover:text-text-main border border-border-sec rounded text-[10px] font-bold transition-all shadow-sm cursor-pointer"
+                title="Configure Columns"
+              >
+                <Settings size={11} className={dropdownOpen ? 'animate-spin' : ''} />
+                <span>Columns</span>
+              </button>
+
+              {dropdownOpen && (
+                <div className="absolute left-0 top-full mt-1.5 w-48 bg-panel-bg border border-border-sec rounded shadow-xl p-2.5 z-50 animate-fade-in text-text-main">
+                  <h4 className="text-[10px] font-black tracking-wider uppercase text-text-mute border-b border-border-main pb-1 mb-1.5">
+                    Toggle Columns
+                  </h4>
+                  <div className="space-y-1 max-h-48 overflow-y-auto">
+                    <label className="flex items-center gap-2 text-app-xs font-semibold cursor-pointer hover:bg-app-bg/50 px-1 py-0.5 rounded transition-colors">
+                      <input
+                        type="checkbox"
+                        checked={columnConfig.showHSN}
+                        onChange={() => toggleColumn('showHSN')}
+                        className="rounded text-border-acc focus:ring-border-acc h-3 w-3 accent-emerald-500"
+                      />
+                      <span>HSN</span>
+                    </label>
+                    <label className="flex items-center gap-2 text-app-xs font-semibold cursor-pointer hover:bg-app-bg/50 px-1 py-0.5 rounded transition-colors">
+                      <input
+                        type="checkbox"
+                        checked={columnConfig.showUOM}
+                        onChange={() => toggleColumn('showUOM')}
+                        className="rounded text-border-acc focus:ring-border-acc h-3 w-3 accent-emerald-500"
+                      />
+                      <span>UOM</span>
+                    </label>
+                    <label className="flex items-center gap-2 text-app-xs font-semibold cursor-pointer hover:bg-app-bg/50 px-1 py-0.5 rounded transition-colors">
+                      <input
+                        type="checkbox"
+                        checked={columnConfig.showPrice}
+                        onChange={() => toggleColumn('showPrice')}
+                        className="rounded text-border-acc focus:ring-border-acc h-3 w-3 accent-emerald-500"
+                      />
+                      <span>Price (+GST)</span>
+                    </label>
+                    <label className="flex items-center gap-2 text-app-xs font-semibold cursor-pointer hover:bg-app-bg/50 px-1 py-0.5 rounded transition-colors">
+                      <input
+                        type="checkbox"
+                        checked={columnConfig.showNetWeight}
+                        onChange={() => toggleColumn('showNetWeight')}
+                        className="rounded text-border-acc focus:ring-border-acc h-3 w-3 accent-emerald-500"
+                      />
+                      <span>Net Weight</span>
+                    </label>
+                    <label className="flex items-center gap-2 text-app-xs font-semibold cursor-pointer hover:bg-app-bg/50 px-1 py-0.5 rounded transition-colors">
+                      <input
+                        type="checkbox"
+                        checked={columnConfig.showNetRate}
+                        onChange={() => toggleColumn('showNetRate')}
+                        className="rounded text-border-acc focus:ring-border-acc h-3 w-3 accent-emerald-500"
+                      />
+                      <span>Net Rate</span>
+                    </label>
+                    <label className="flex items-center gap-2 text-app-xs font-semibold cursor-pointer hover:bg-app-bg/50 px-1 py-0.5 rounded transition-colors">
+                      <input
+                        type="checkbox"
+                        checked={columnConfig.showRate}
+                        onChange={() => toggleColumn('showRate')}
+                        className="rounded text-border-acc focus:ring-border-acc h-3 w-3 accent-emerald-500"
+                      />
+                      <span>Rate</span>
+                    </label>
+                    <label className="flex items-center gap-2 text-app-xs font-semibold cursor-pointer hover:bg-app-bg/50 px-1 py-0.5 rounded transition-colors">
+                      <input
+                        type="checkbox"
+                        checked={columnConfig.showGST}
+                        onChange={() => toggleColumn('showGST')}
+                        className="rounded text-border-acc focus:ring-border-acc h-3 w-3 accent-emerald-500"
+                      />
+                      <span>GST %</span>
+                    </label>
+                  </div>
+                  <div className="border-t border-border-main mt-2 pt-1.5 flex justify-end">
+                    <button
+                      onClick={resetColumnConfig}
+                      className="px-1.5 py-0.5 bg-alert/10 hover:bg-alert/20 text-alert text-[8px] font-bold rounded cursor-pointer transition-colors"
+                    >
+                      Reset
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
           <span className="text-app-xs text-text-acc font-bold">
             Click menu on left to edit fields
           </span>

@@ -5,7 +5,8 @@ import type { MasterForm } from './sidebar';
 import { AddProductForm } from './AddProductForm';
 import type { Product } from './AddProductForm';
 import { ProductListTable } from './ProductListTable';
-import type { TableItem } from './ProductListTable';
+import type { TableItem, ColumnConfig } from './ProductListTable';
+import { DEFAULT_CONFIG } from './ProductListTable';
 import { SummaryFooter } from './SummaryFooter';
 
 // In-Memory Database for demonstration
@@ -37,6 +38,31 @@ export default function App() {
   // Master form state
   const [form, setForm] = useState<MasterForm>(INITIAL_FORM);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+
+  const [columnConfig, setColumnConfig] = useState<ColumnConfig>(() => {
+    try {
+      const saved = localStorage.getItem('invoice_column_config');
+      if (saved) {
+        return { ...DEFAULT_CONFIG, ...JSON.parse(saved) };
+      }
+    } catch (e) {
+      console.error(e);
+    }
+    return DEFAULT_CONFIG;
+  });
+
+  const toggleColumn = (key: keyof ColumnConfig) => {
+    setColumnConfig((prev) => {
+      const updated = { ...prev, [key]: !prev[key] };
+      localStorage.setItem('invoice_column_config', JSON.stringify(updated));
+      return updated;
+    });
+  };
+
+  const resetColumnConfig = () => {
+    setColumnConfig(DEFAULT_CONFIG);
+    localStorage.setItem('invoice_column_config', JSON.stringify(DEFAULT_CONFIG));
+  };
 
   // Table items state
   const [items, setItems] = useState<TableItem[]>([]);
@@ -371,6 +397,9 @@ export default function App() {
             onChange={setForm}
             sidebarOpen={sidebarOpen}
             onToggleSidebar={() => setSidebarOpen(true)}
+            columnConfig={columnConfig}
+            toggleColumn={toggleColumn}
+            resetColumnConfig={resetColumnConfig}
           />
         </div>
 
@@ -382,6 +411,7 @@ export default function App() {
             editingSrNo={editingSrNo}
             setEditingSrNo={setEditingSrNo}
             handleDeleteItem={handleDeleteItem}
+            columnConfig={columnConfig}
           />
         </div>
 
