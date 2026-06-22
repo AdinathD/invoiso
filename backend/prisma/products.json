@@ -15,11 +15,10 @@
   { "id": "14", "name": "FORTUNE SUNLITE REFINED OIL 1 LTR", "hsn": "15121910", "price": 128, "gstPercent": 5, "stock": 240, "uom": "BTL", "category": "Oil" },
   { "id": "15", "name": "GOLD WINNER SUNFLOWER OIL 5 LTR", "hsn": "15121910", "price": 720, "gstPercent": 5, "stock": 90, "uom": "JAR", "category": "Oil" },
   { "id": "16", "name": "DHARA MUSTARD OIL 1 LTR", "hsn": "15149100", "price": 165, "gstPercent": 5, "stock": 145, "uom": "BTL", "category": "Oil" },
-   { "id": "17", "name": "AASHIRVAAD SELECT SHARBATI ATTA [5 KG]", "hsn": "11010000", "price": 265, "gstPercent": 0, "stock": 220, "uom": "BAG", "category": "Flour" },
-    { "id": "18", "name": "PILLSBURY CHAKKI FRESH ATTA [10 KG]", "hsn": "11010000", "price": 430, "gstPercent": 0, "stock": 175, "uom": "BAG", "category": "Flour" },
+  { "id": "17", "name": "AASHIRVAAD SELECT SHARBATI ATTA [5 KG]", "hsn": "11010000", "price": 265, "gstPercent": 0, "stock": 220, "uom": "BAG", "category": "Flour" },
+  { "id": "18", "name": "PILLSBURY CHAKKI FRESH ATTA [10 KG]", "hsn": "11010000", "price": 430, "gstPercent": 0, "stock": 175, "uom": "BAG", "category": "Flour" },
   { "id": "19", "name": "RAJDHANI BESAN [1 KG]", "hsn": "11061000", "price": 92, "gstPercent": 0, "stock": 280, "uom": "PCS", "category": "Flour" },
   { "id": "20", "name": "FORTUNE BESAN [500 GM]", "hsn": "11061000", "price": 48, "gstPercent": 0, "stock": 320, "uom": "PCS", "category": "Flour" },
-
   { "id": "21", "name": "TATA SAMPANN TOOR DAL [1 KG]", "hsn": "07136000", "price": 145, "gstPercent": 0, "stock": 165, "uom": "PCS", "category": "Pulses" },
   { "id": "22", "name": "TATA SAMPANN MOONG DAL [1 KG]", "hsn": "07133100", "price": 132, "gstPercent": 0, "stock": 140, "uom": "PCS", "category": "Pulses" },
   { "id": "23", "name": "TATA SAMPANN CHANA DAL [1 KG]", "hsn": "07132000", "price": 98, "gstPercent": 0, "stock": 210, "uom": "PCS", "category": "Pulses" },

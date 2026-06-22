@@ -1,7 +1,7 @@
 import React from 'react';
 import { User, Phone, Clipboard, Menu, X, Settings } from 'lucide-react';
 import { handleEnterTraversal } from './keyboardUtils.ts';
-import type { ColumnConfig } from './invoice/ProductListTable';
+import type { ColumnConfig } from './invoice/types';
 
 export interface MasterForm {
   name: string;
@@ -29,9 +29,9 @@ interface MasterHeaderProps {
   resetColumnConfig: () => void;
 }
 
-export const MasterHeader: React.FC<MasterHeaderProps> = ({ 
-  form, 
-  sidebarOpen, 
+export const MasterHeader: React.FC<MasterHeaderProps> = ({
+  form,
+  sidebarOpen,
   onToggleSidebar,
   columnConfig,
   toggleColumn,
@@ -72,7 +72,7 @@ export const MasterHeader: React.FC<MasterHeaderProps> = ({
             <span className="text-app-md font-bold text-text-main">
               Add Invoice - Wholesale Credit
             </span>
-            
+
             {/* Columns Config Settings Button & Popover */}
             <div className="relative" ref={dropdownRef}>
               <button
@@ -259,8 +259,8 @@ export const InvoiceSidebar: React.FC<InvoiceSidebarProps> = ({ form, onChange, 
         aria-modal="false"
         aria-label="Invoice Details"
         className={`fixed md:sticky top-0 bottom-0 left-0 h-screen flex flex-col z-50 md:z-30 bg-panel-bg text-text-main border-border-sec transition-all duration-300 ease-in-out ${isOpen
-            ? 'w-[300px] sm:w-[320px] translate-x-0 border-r shadow-2xl md:shadow-none'
-            : 'w-0 -translate-x-full md:translate-x-0 md:w-0 overflow-hidden border-r-0'
+          ? 'w-[300px] sm:w-[320px] translate-x-0 border-r shadow-2xl md:shadow-none'
+          : 'w-0 -translate-x-full md:translate-x-0 md:w-0 overflow-hidden border-r-0'
           }`}
       >
         {/* Fixed width container to prevent content wrapping/reflow during width animation */}

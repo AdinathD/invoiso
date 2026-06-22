@@ -1,15 +1,6 @@
 import React from 'react';
 import { Trash2, Edit, Save } from 'lucide-react';
-
-export interface ColumnConfig {
-  showHSN: boolean;
-  showUOM: boolean;
-  showPrice: boolean;
-  showNetWeight: boolean;
-  showNetRate: boolean;
-  showRate: boolean;
-  showGST: boolean;
-}
+import type { ColumnConfig, TableItem } from './types';
 
 export const DEFAULT_CONFIG: ColumnConfig = {
   showHSN: true,
@@ -20,21 +11,6 @@ export const DEFAULT_CONFIG: ColumnConfig = {
   showRate: true,
   showGST: true,
 };
-
-export interface TableItem {
-  srNo: number;
-  id: string;
-  name: string;
-  hsn: string;
-  quantity: number;
-  uom: string;
-  price: number; // Price with GST
-  netWt: number;
-  netRate: number;
-  rate: number;
-  gstPercent: number;
-  net: number;
-}
 
 interface ProductListTableProps {
   items: TableItem[];

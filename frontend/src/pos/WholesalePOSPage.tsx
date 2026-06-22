@@ -9,6 +9,7 @@ import { POSProductGrid } from './POSProductGrid';
 import { POSCartSummary } from './POSCartSummary';
 import type { POSProduct, CartItem } from './types';
 import { handleEnterTraversal } from '../keyboardUtils';
+import { fetchProducts } from '../apiUtils/productsApi';
 
 interface WholesalePOSPageProps {
   form: MasterForm;
@@ -37,17 +38,17 @@ export default function WholesalePOSPage({ form, setForm, darkMode, toggleDarkMo
   // Categories list
   const categories = ['All', 'Rice', 'Oil', 'Flour', 'Salt', 'Pulses'];
 
-  // Fetch products from external JSON file on mount
+  // Fetch products from backend on mount
   useEffect(() => {
-    fetch('./products.json')
-      .then(res => {
-        if (!res.ok) {
-          throw new Error(`HTTP error! status: ${res.status}`);
-        }
-        return res.json();
-      })
-      .then(data => setProducts(data))
-      .catch(err => console.error("Error loading products.json:", err));
+    async function loadProducts() {
+      try {
+        const data = await fetchProducts();
+        setProducts(data);
+      } catch (err) {
+        console.error("Error loading products:", err);
+      }
+    }
+    loadProducts();
   }, []);
 
   // Filter products based on search and category

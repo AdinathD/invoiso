@@ -7,6 +7,7 @@ export interface POSProduct {
   stock: number;
   uom: string;
   category: string;
+  defaultWeight?: number;
 }
 
 export interface CartItem {

@@ -1,17 +1,7 @@
 import React from 'react';
 import { Plus } from 'lucide-react';
 import { handleEnterTraversal } from '../keyboardUtils.ts';
-
-export interface Product {
-  id: string;
-  name: string;
-  hsn: string;
-  priceWithGst: number;
-  gstPercent: number;
-  uom: string;
-  stockLabel: string;
-  defaultWeight: number;
-}
+import type { Product } from './types';
 
 interface AddProductFormProps {
   products: Product[];
@@ -193,7 +183,7 @@ export const AddProductForm: React.FC<AddProductFormProps> = ({
                 >
                   <div className="font-extrabold text-text-main">{p.name}</div>
                   <div className="text-app-xs text-text-mute mt-0.5">
-                    Stock: <span className="text-alert font-bold">{p.stockLabel}</span> | Rate + GST: <span className="text-text-acc font-bold">INR {p.priceWithGst.toFixed(2)}</span>
+                    Stock: <span className="text-alert font-bold">{p.stock}</span> | Rate + GST: <span className="text-text-acc font-bold">INR {p.price.toFixed(2)}</span>
                   </div>
                 </div>
               ))}
@@ -322,7 +312,7 @@ export const AddProductForm: React.FC<AddProductFormProps> = ({
           ? 'text-alert'
           : 'text-text-mute'
           }`}>
-          {selectedProduct ? `⚠️ Stock: ${selectedProduct.stockLabel}` : 'No Product Selected / Inventory'}
+          {selectedProduct ? `⚠️ Stock: ${selectedProduct.stock}` : 'No Product Selected / Inventory'}
         </span>
       </div>
     </div>

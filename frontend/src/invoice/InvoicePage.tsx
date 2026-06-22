@@ -3,22 +3,11 @@ import { ShoppingBag, X } from 'lucide-react';
 import { MasterHeader, InvoiceSidebar } from '../sidebar';
 import type { MasterForm } from '../sidebar';
 import { AddProductForm } from './AddProductForm';
-import type { Product } from './AddProductForm';
-import { ProductListTable } from './ProductListTable';
-import type { TableItem, ColumnConfig } from './ProductListTable';
-import { DEFAULT_CONFIG } from './ProductListTable';
+import { ProductListTable, DEFAULT_CONFIG } from './ProductListTable';
 import { SummaryFooter } from './SummaryFooter';
 import { Link } from 'react-router-dom';
-
-// In-Memory Database for demonstration
-const SAMPLE_PRODUCTS: Product[] = [
-  { id: '1', name: 'DAAWAT RICE APPLE PREMIUM BASMATI [30 KG]', hsn: '10063092', priceWithGst: 85.00, gstPercent: 0, uom: 'KGS', stockLabel: 'BOX(1.10) PCS(22.00)', defaultWeight: 30.00 },
-  { id: '2', name: 'DAAWAT RICE BROWN JAR 1 KG', hsn: '10063010', priceWithGst: 170.00, gstPercent: 5, uom: 'PCS', stockLabel: 'BOX(4.00) PCS(48.00)', defaultWeight: 1.00 },
-  { id: '3', name: 'FORTUNE SOYABEAN OIL 1 LTR', hsn: '15079010', priceWithGst: 120.00, gstPercent: 5, uom: 'BTL', stockLabel: 'BOX(12.00) PCS(144.00)', defaultWeight: 0.91 },
-  { id: '4', name: 'AASHIRVAAD ATTA SHUDH CHAKKI [10 KG]', hsn: '11010000', priceWithGst: 450.00, gstPercent: 0, uom: 'BAG', stockLabel: 'BOX(0.00) PCS(15.00)', defaultWeight: 10.00 },
-  { id: '5', name: 'TATA SALT PRO VACUUM EVAPORATED [1 KG]', hsn: '25010021', priceWithGst: 28.00, gstPercent: 0, uom: 'PCS', stockLabel: 'BOX(2.00) PCS(50.00)', defaultWeight: 1.00 },
-  { id: '6', name: ' SALT PRO VACUUM EVAPORATED [1 KG]', hsn: '25010022', priceWithGst: 28.00, gstPercent: 0, uom: 'PCS', stockLabel: 'BOX(2.00) PCS(50.00)', defaultWeight: 1.00 }
-];
+import type { Product, TableItem, ColumnConfig } from './types';
+import { fetchProducts } from '../apiUtils/productsApi';
 
 interface InvoicePageProps {
   form: MasterForm;
@@ -29,6 +18,20 @@ interface InvoicePageProps {
 
 export default function InvoicePage({ form, setForm, darkMode, toggleDarkMode }: InvoicePageProps) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [products, setProducts] = useState<Product[]>([]);
+
+  // Fetch products from backend on mount
+  useEffect(() => {
+    async function loadProducts() {
+      try {
+        const data = await fetchProducts();
+        setProducts(data);
+      } catch (err) {
+        console.error("Error loading products:", err);
+      }
+    }
+    loadProducts();
+  }, []);
 
   const [columnConfig, setColumnConfig] = useState<ColumnConfig>(() => {
     try {
@@ -199,11 +202,11 @@ export default function InvoicePage({ form, setForm, darkMode, toggleDarkMode }:
     setSelectedProduct(product);
     setActiveSearch(product.name);
     setShowDropdown(false);
-    setActivePrice(product.priceWithGst.toString());
+    setActivePrice(product.price.toString());
     setActiveGstPercent(product.gstPercent.toString());
     setActiveUOM(product.uom);
     setActiveQty('1.00');
-    setActiveNetWt(product.defaultWeight.toString());
+    setActiveNetWt(product.defaultWeight ? product.defaultWeight.toString() : '0.00');
   };
 
   // Auto weight updater when Qty changes in entry row
@@ -211,7 +214,7 @@ export default function InvoicePage({ form, setForm, darkMode, toggleDarkMode }:
     setActiveQty(val);
     const numQty = parseFloat(val) || 0;
     if (selectedProduct) {
-      setActiveNetWt((numQty * selectedProduct.defaultWeight).toFixed(2));
+      setActiveNetWt((numQty * (selectedProduct.defaultWeight || 0)).toFixed(2));
     }
   };
 
@@ -400,7 +403,7 @@ export default function InvoicePage({ form, setForm, darkMode, toggleDarkMode }:
         {/* CALLING MODULAR ADD PRODUCT FORM COMPONENT */}
         <div className="shrink-0">
           <AddProductForm
-            products={SAMPLE_PRODUCTS}
+            products={products}
             activeSearch={activeSearch}
             setActiveSearch={setActiveSearch}
             showDropdown={showDropdown}

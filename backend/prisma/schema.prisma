@@ -1,0 +1,23 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Product {
+  id            String   @id @default(uuid())
+  name          String
+  hsn           String
+  price         Decimal  @db.Decimal(12, 2)
+  gstPercent    Decimal  @db.Decimal(5, 2)
+  stock         Decimal  @db.Decimal(12, 3)
+  uom           String
+  category      String
+  defaultWeight Decimal? @db.Decimal(12, 3)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
