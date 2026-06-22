@@ -1,5 +1,5 @@
 import React, { useRef } from 'react';
-import { handleEnterTraversal } from './keyboardUtils.ts';
+import { handleEnterTraversal } from '../keyboardUtils.ts';
 
 interface SummaryFooterProps {
   totals: {

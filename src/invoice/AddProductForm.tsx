@@ -1,6 +1,6 @@
 import React from 'react';
 import { Plus } from 'lucide-react';
-import { handleEnterTraversal } from './keyboardUtils.ts';
+import { handleEnterTraversal } from '../keyboardUtils.ts';
 
 export interface Product {
   id: string;
@@ -328,4 +328,3 @@ export const AddProductForm: React.FC<AddProductFormProps> = ({
     </div>
   );
 };
-

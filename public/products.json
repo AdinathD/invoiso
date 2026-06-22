@@ -1,0 +1,27 @@
+[
+  { "id": "1", "name": "DAAWAT RICE APPLE PREMIUM BASMATI [30 KG]", "hsn": "10063092", "price": 2550, "gstPercent": 5, "stock": 120, "uom": "BAG", "category": "Rice" },
+  { "id": "2", "name": "DAAWAT RICE BROWN JAR 1 KG", "hsn": "10063010", "price": 170, "gstPercent": 5, "stock": 45, "uom": "PCS", "category": "Rice" },
+  { "id": "3", "name": "FORTUNE SOYABEEEN OIL 15 LTR", "hsn": "15079010", "price": 1850, "gstPercent": 5, "stock": 85, "uom": "TIN", "category": "Oil" },
+  { "id": "4", "name": "FORTUNE SOYABEEEN OIL 1 LTR", "hsn": "15079010", "price": 120, "gstPercent": 5, "stock": 210, "uom": "BTL", "category": "Oil" },
+  { "id": "5", "name": "AASHIRVAAD ATTA SHUDH CHAKKI [10 KG]", "hsn": "11010000", "price": 450, "gstPercent": 0, "stock": 340, "uom": "BAG", "category": "Flour" },
+  { "id": "6", "name": "TATA SALT PRO VACUUM EVAPORATED [1 KG]", "hsn": "25010021", "price": 28, "gstPercent": 0, "stock": 500, "uom": "PCS", "category": "Salt" },
+  { "id": "7", "name": "PREMIUM MAIDA FLOUR [50 KG]", "hsn": "11010010", "price": 1650, "gstPercent": 0, "stock": 42, "uom": "BAG", "category": "Flour" },
+  { "id": "8", "name": "ORGANIC MOONG DAL 5 KG", "hsn": "07133100", "price": 620, "gstPercent": 0, "stock": 68, "uom": "PCS", "category": "Pulses" },
+  { "id": "9", "name": "INDIA GATE BASMATI RICE CLASSIC [25 KG]", "hsn": "10063020", "price": 2850, "gstPercent": 5, "stock": 95, "uom": "BAG", "category": "Rice" },
+  { "id": "10", "name": "INDIA GATE MINI MOGRA RICE [10 KG]", "hsn": "10063090", "price": 720, "gstPercent": 5, "stock": 130, "uom": "BAG", "category": "Rice" },
+  { "id": "11", "name": "KOHINOOR SUPER BASMATI RICE [5 KG]", "hsn": "10063020", "price": 540, "gstPercent": 5, "stock": 180, "uom": "PCS", "category": "Rice" },
+  { "id": "12", "name": "FORTUNE BASMATI RICE BIRYANI SPECIAL [10 KG]", "hsn": "10063020", "price": 980, "gstPercent": 5, "stock": 75, "uom": "BAG", "category": "Rice" },
+  { "id": "13", "name": "FORTUNE SUNLITE REFINED OIL 15 LTR", "hsn": "15121910", "price": 1920, "gstPercent": 5, "stock": 64, "uom": "TIN", "category": "Oil" },
+  { "id": "14", "name": "FORTUNE SUNLITE REFINED OIL 1 LTR", "hsn": "15121910", "price": 128, "gstPercent": 5, "stock": 240, "uom": "BTL", "category": "Oil" },
+  { "id": "15", "name": "GOLD WINNER SUNFLOWER OIL 5 LTR", "hsn": "15121910", "price": 720, "gstPercent": 5, "stock": 90, "uom": "JAR", "category": "Oil" },
+  { "id": "16", "name": "DHARA MUSTARD OIL 1 LTR", "hsn": "15149100", "price": 165, "gstPercent": 5, "stock": 145, "uom": "BTL", "category": "Oil" },
+   { "id": "17", "name": "AASHIRVAAD SELECT SHARBATI ATTA [5 KG]", "hsn": "11010000", "price": 265, "gstPercent": 0, "stock": 220, "uom": "BAG", "category": "Flour" },
+    { "id": "18", "name": "PILLSBURY CHAKKI FRESH ATTA [10 KG]", "hsn": "11010000", "price": 430, "gstPercent": 0, "stock": 175, "uom": "BAG", "category": "Flour" },
+  { "id": "19", "name": "RAJDHANI BESAN [1 KG]", "hsn": "11061000", "price": 92, "gstPercent": 0, "stock": 280, "uom": "PCS", "category": "Flour" },
+  { "id": "20", "name": "FORTUNE BESAN [500 GM]", "hsn": "11061000", "price": 48, "gstPercent": 0, "stock": 320, "uom": "PCS", "category": "Flour" },
+
+  { "id": "21", "name": "TATA SAMPANN TOOR DAL [1 KG]", "hsn": "07136000", "price": 145, "gstPercent": 0, "stock": 165, "uom": "PCS", "category": "Pulses" },
+  { "id": "22", "name": "TATA SAMPANN MOONG DAL [1 KG]", "hsn": "07133100", "price": 132, "gstPercent": 0, "stock": 140, "uom": "PCS", "category": "Pulses" },
+  { "id": "23", "name": "TATA SAMPANN CHANA DAL [1 KG]", "hsn": "07132000", "price": 98, "gstPercent": 0, "stock": 210, "uom": "PCS", "category": "Pulses" },
+  { "id": "24", "name": "PREMIUM URAD DAL [1 KG]", "hsn": "07133190", "price": 155, "gstPercent": 0, "stock": 125, "uom": "PCS", "category": "Pulses" }
+]

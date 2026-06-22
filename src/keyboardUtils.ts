@@ -20,7 +20,7 @@ export function getFocusableElements(container: HTMLElement): HTMLElement[] {
  */
 export function handleEnterTraversal(e: React.KeyboardEvent<HTMLElement>, container: HTMLElement | null) {
   if (!container) return;
-  
+
   const target = e.target as HTMLElement;
   const isInputOrSelect = target.tagName === 'INPUT' || target.tagName === 'SELECT' || target.tagName === 'TEXTAREA' || target.tagName === 'BUTTON';
   if (!isInputOrSelect) return;
@@ -36,7 +36,7 @@ export function handleEnterTraversal(e: React.KeyboardEvent<HTMLElement>, contai
     e.preventDefault();
     const elements = getFocusableElements(container);
     const index = elements.indexOf(target);
-    
+
     if (e.shiftKey) {
       if (index > 0) {
         elements[index - 1].focus();

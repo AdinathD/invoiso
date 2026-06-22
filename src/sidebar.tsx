@@ -1,7 +1,7 @@
 import React from 'react';
 import { User, Phone, Clipboard, Menu, X, Settings } from 'lucide-react';
 import { handleEnterTraversal } from './keyboardUtils.ts';
-import type { ColumnConfig } from './ProductListTable';
+import type { ColumnConfig } from './invoice/ProductListTable';
 
 export interface MasterForm {
   name: string;
