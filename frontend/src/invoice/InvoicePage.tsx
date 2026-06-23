@@ -8,6 +8,7 @@ import { SummaryFooter } from './SummaryFooter';
 import { Link } from 'react-router-dom';
 import type { Product, TableItem, ColumnConfig } from './types';
 import { fetchProducts } from '../apiUtils/productsApi';
+import { AddProductModal } from '../AddProductModal';
 
 interface InvoicePageProps {
   form: MasterForm;
@@ -19,6 +20,7 @@ interface InvoicePageProps {
 export default function InvoicePage({ form, setForm, darkMode, toggleDarkMode }: InvoicePageProps) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [products, setProducts] = useState<Product[]>([]);
+  const [isAddProductModalOpen, setIsAddProductModalOpen] = useState(false);
 
   // Fetch products from backend on mount
   useEffect(() => {
@@ -358,6 +360,12 @@ export default function InvoicePage({ form, setForm, darkMode, toggleDarkMode }:
                 🖥️ Switch to Wholesale POS
               </Link>
               <button
+                className="px-2 py-1 bg-text-acc/10 hover:bg-text-acc/25 text-text-acc text-app-xs font-extrabold rounded border border-text-acc/40 transition-all cursor-pointer"
+                onClick={() => setIsAddProductModalOpen(true)}
+              >
+                ➕ Add Product
+              </button>
+              <button
                 className="px-2 py-0.5 rounded text-app-base font-semibold flex items-center gap-1 cursor-pointer transition-all border border-border-sec bg-text-main text-panel-bg"
                 onClick={toggleDarkMode}
               >
@@ -553,6 +561,11 @@ export default function InvoicePage({ form, setForm, darkMode, toggleDarkMode }:
           </div>
         </div>
       )}
+      <AddProductModal
+        isOpen={isAddProductModalOpen}
+        onClose={() => setIsAddProductModalOpen(false)}
+        onProductAdded={(newProduct) => setProducts(prev => [...prev, newProduct])}
+      />
     </div>
   );
 }

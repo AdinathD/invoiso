@@ -3,6 +3,7 @@ import { ShoppingBag, Home, Menu, X } from 'lucide-react';
 import { InvoiceSidebar } from '../sidebar';
 import type { MasterForm } from '../sidebar';
 import { Link } from 'react-router-dom';
+import { AddProductModal } from '../AddProductModal';
 
 // Import local POS components
 import { POSProductGrid } from './POSProductGrid';
@@ -24,6 +25,7 @@ export default function WholesalePOSPage({ form, setForm, darkMode, toggleDarkMo
 
   // POS Products State loaded from JSON
   const [products, setProducts] = useState<POSProduct[]>([]);
+  const [isAddProductModalOpen, setIsAddProductModalOpen] = useState(false);
 
   // POS Cart State
   const [cart, setCart] = useState<CartItem[]>([]);
@@ -257,6 +259,13 @@ export default function WholesalePOSPage({ form, setForm, darkMode, toggleDarkMo
             </Link>
 
             <button
+              className="px-2 py-1 bg-text-acc/10 hover:bg-text-acc/25 text-text-acc text-app-xs font-extrabold rounded border border-text-acc/40 transition-all cursor-pointer"
+              onClick={() => setIsAddProductModalOpen(true)}
+            >
+              ➕ Add Product
+            </button>
+
+            <button
               className="px-2 py-1 rounded text-app-xs font-semibold border border-border-sec bg-text-main text-panel-bg cursor-pointer"
               onClick={toggleDarkMode}
             >
@@ -389,6 +398,11 @@ export default function WholesalePOSPage({ form, setForm, darkMode, toggleDarkMo
           </div>
         </div>
       )}
+      <AddProductModal
+        isOpen={isAddProductModalOpen}
+        onClose={() => setIsAddProductModalOpen(false)}
+        onProductAdded={(newProduct) => setProducts(prev => [...prev, newProduct])}
+      />
     </div>
   );
 }
