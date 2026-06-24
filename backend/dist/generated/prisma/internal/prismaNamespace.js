@@ -48,7 +48,7 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.defineExtension = exports.NullsOrder = exports.QueryMode = exports.SortOrder = exports.ProductScalarFieldEnum = exports.TransactionIsolationLevel = exports.ModelName = exports.AnyNull = exports.JsonNull = exports.DbNull = exports.NullTypes = exports.prismaVersion = exports.getExtensionContext = exports.Decimal = exports.Sql = exports.raw = exports.join = exports.empty = exports.sql = exports.PrismaClientValidationError = exports.PrismaClientInitializationError = exports.PrismaClientRustPanicError = exports.PrismaClientUnknownRequestError = exports.PrismaClientKnownRequestError = void 0;
+exports.defineExtension = exports.NullsOrder = exports.QueryMode = exports.SortOrder = exports.CustomerScalarFieldEnum = exports.InvoiceItemScalarFieldEnum = exports.InvoiceScalarFieldEnum = exports.ProductScalarFieldEnum = exports.TransactionIsolationLevel = exports.ModelName = exports.AnyNull = exports.JsonNull = exports.DbNull = exports.NullTypes = exports.prismaVersion = exports.getExtensionContext = exports.Decimal = exports.Sql = exports.raw = exports.join = exports.empty = exports.sql = exports.PrismaClientValidationError = exports.PrismaClientInitializationError = exports.PrismaClientRustPanicError = exports.PrismaClientUnknownRequestError = exports.PrismaClientKnownRequestError = void 0;
 const runtime = __importStar(require("@prisma/client/runtime/library"));
 /**
  * Prisma Errors
@@ -103,7 +103,10 @@ exports.JsonNull = runtime.objectEnumValues.instances.JsonNull;
  */
 exports.AnyNull = runtime.objectEnumValues.instances.AnyNull;
 exports.ModelName = {
-    Product: 'Product'
+    Product: 'Product',
+    Invoice: 'Invoice',
+    InvoiceItem: 'InvoiceItem',
+    Customer: 'Customer'
 };
 /**
  * Enums
@@ -124,6 +127,61 @@ exports.ProductScalarFieldEnum = {
     uom: 'uom',
     category: 'category',
     defaultWeight: 'defaultWeight',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+};
+exports.InvoiceScalarFieldEnum = {
+    id: 'id',
+    invoiceNo: 'invoiceNo',
+    invoiceDate: 'invoiceDate',
+    customerId: 'customerId',
+    customerName: 'customerName',
+    customerMobile: 'customerMobile',
+    remarks: 'remarks',
+    balance: 'balance',
+    pan: 'pan',
+    gstin: 'gstin',
+    gstType: 'gstType',
+    city: 'city',
+    state: 'state',
+    country: 'country',
+    billTo: 'billTo',
+    hamali: 'hamali',
+    freight: 'freight',
+    taxableAmount: 'taxableAmount',
+    taxAmount: 'taxAmount',
+    netTotal: 'netTotal',
+    createdAt: 'createdAt'
+};
+exports.InvoiceItemScalarFieldEnum = {
+    id: 'id',
+    invoiceId: 'invoiceId',
+    productId: 'productId',
+    srNo: 'srNo',
+    name: 'name',
+    hsn: 'hsn',
+    quantity: 'quantity',
+    uom: 'uom',
+    price: 'price',
+    netWt: 'netWt',
+    rate: 'rate',
+    netRate: 'netRate',
+    gstPercent: 'gstPercent',
+    net: 'net'
+};
+exports.CustomerScalarFieldEnum = {
+    id: 'id',
+    name: 'name',
+    mobileNo: 'mobileNo',
+    remarks: 'remarks',
+    balance: 'balance',
+    pan: 'pan',
+    gstType: 'gstType',
+    gstin: 'gstin',
+    city: 'city',
+    state: 'state',
+    country: 'country',
+    billTo: 'billTo',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt'
 };

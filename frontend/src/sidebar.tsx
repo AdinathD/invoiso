@@ -2,6 +2,8 @@ import React from 'react';
 import { User, Phone, Clipboard, Menu, X, Settings } from 'lucide-react';
 import { handleEnterTraversal } from './keyboardUtils.ts';
 import type { ColumnConfig } from './invoice/types';
+import { fetchCustomers } from './apiUtils/customersApi';
+import type { Customer } from './apiUtils/customersApi';
 
 export interface MasterForm {
   name: string;
@@ -17,6 +19,7 @@ export interface MasterForm {
   state: string;
   country: string;
   billTo: string;
+  customerId?: string;
 }
 
 interface MasterHeaderProps {
@@ -213,6 +216,12 @@ interface InvoiceSidebarProps {
 export const InvoiceSidebar: React.FC<InvoiceSidebarProps> = ({ form, onChange, isOpen, onClose, onBillToEnter }) => {
   const containerRef = React.useRef<HTMLDivElement>(null);
   const nameInputRef = React.useRef<HTMLInputElement>(null);
+  const dropdownRef = React.useRef<HTMLDivElement>(null);
+  const listboxRef = React.useRef<HTMLDivElement>(null);
+
+  const [customers, setCustomers] = React.useState<Customer[]>([]);
+  const [showCustDropdown, setShowCustDropdown] = React.useState(false);
+  const [activeCustIdx, setActiveCustIdx] = React.useState(-1);
 
   React.useEffect(() => {
     if (isOpen) {
@@ -222,8 +231,68 @@ export const InvoiceSidebar: React.FC<InvoiceSidebarProps> = ({ form, onChange, 
     }
   }, [isOpen]);
 
+  React.useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setShowCustDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  React.useEffect(() => {
+    setActiveCustIdx(-1);
+  }, [showCustDropdown, form.name]);
+
   const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
     const target = e.target as HTMLElement;
+    const isNameInput = target === nameInputRef.current;
+
+    if (e.key === 'Escape') {
+      if (showCustDropdown) {
+        e.stopPropagation();
+        setShowCustDropdown(false);
+      }
+      return;
+    }
+
+    if (isNameInput) {
+      if (e.key === 'ArrowDown' && showCustDropdown && customers.length > 0) {
+        e.preventDefault();
+        setActiveCustIdx(prev => {
+          const next = prev + 1 >= customers.length ? 0 : prev + 1;
+          const itemEl = listboxRef.current?.children[next] as HTMLElement;
+          itemEl?.scrollIntoView({ block: 'nearest' });
+          return next;
+        });
+        return;
+      }
+      if (e.key === 'ArrowUp' && showCustDropdown && customers.length > 0) {
+        e.preventDefault();
+        setActiveCustIdx(prev => {
+          const next = prev - 1 < 0 ? customers.length - 1 : prev - 1;
+          const itemEl = listboxRef.current?.children[next] as HTMLElement;
+          itemEl?.scrollIntoView({ block: 'nearest' });
+          return next;
+        });
+        return;
+      }
+      if (e.key === 'Enter') {
+        if (showCustDropdown && activeCustIdx >= 0 && activeCustIdx < customers.length) {
+          e.preventDefault();
+          handleSelectCustomer(customers[activeCustIdx]);
+          setActiveCustIdx(-1);
+          // Focus the mobile number input
+          setTimeout(() => {
+            const mobileInput = containerRef.current?.querySelector('input[placeholder="Mobile No"]') as HTMLInputElement;
+            mobileInput?.focus();
+          }, 0);
+          return;
+        }
+      }
+    }
+
     if (target instanceof HTMLInputElement && target.placeholder === "Enter Billing Name / Company" && e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       if (!form.name.trim()) {
@@ -242,6 +311,47 @@ export const InvoiceSidebar: React.FC<InvoiceSidebarProps> = ({ form, onChange, 
       ...form,
       [key]: value
     });
+  };
+
+  const handleNameChange = async (value: string) => {
+    handleFieldChange('name', value);
+    onChange({
+      ...form,
+      name: value,
+      customerId: '' // Reset customerId when manual typing occurs
+    });
+
+    if (value.trim().length > 0) {
+      try {
+        const results = await fetchCustomers(value);
+        setCustomers(results);
+        setShowCustDropdown(results.length > 0);
+      } catch (err) {
+        console.error("Error fetching customers:", err);
+      }
+    } else {
+      setCustomers([]);
+      setShowCustDropdown(false);
+    }
+  };
+
+  const handleSelectCustomer = (cust: Customer) => {
+    onChange({
+      ...form,
+      name: cust.name,
+      mobileNo: cust.mobileNo || '',
+      remarks: cust.remarks || '',
+      balance: cust.balance || '',
+      pan: cust.pan || '',
+      gst: cust.gstin || '',
+      gstType: cust.gstType || 'CGST/SGST',
+      city: cust.city || '',
+      state: cust.state || '',
+      country: cust.country || '',
+      billTo: cust.billTo || '',
+      customerId: cust.id
+    });
+    setShowCustDropdown(false);
   };
 
   return (
@@ -290,7 +400,7 @@ export const InvoiceSidebar: React.FC<InvoiceSidebarProps> = ({ form, onChange, 
             {/* Row 1: Name & Mobile */}
             <div className="grid grid-cols-2 gap-2">
               {/* Name Field */}
-              <div className="flex flex-col">
+              <div className="flex flex-col relative" ref={dropdownRef}>
                 <span className="text-app-sm font-extrabold text-text-main mb-1">
                   Name<span className="text-alert ml-0.5">*</span>
                 </span>
@@ -301,11 +411,34 @@ export const InvoiceSidebar: React.FC<InvoiceSidebarProps> = ({ form, onChange, 
                     type="text"
                     className="border border-inp-border bg-inp-bg text-inp-text rounded px-2 pl-6 py-1.5 text-app-md h-8 w-full focus:outline-none focus:border-border-acc"
                     value={form.name}
-                    onChange={(e) => handleFieldChange('name', e.target.value)}
+                    onChange={(e) => handleNameChange(e.target.value)}
+                    onFocus={() => {
+                      if (form.name.trim().length > 0 && customers.length > 0) {
+                        setShowCustDropdown(true);
+                      }
+                    }}
                     placeholder="Customer Name"
                     required
                   />
                 </div>
+                {showCustDropdown && customers.length > 0 && (
+                  <div
+                    ref={listboxRef}
+                    className="absolute left-0 right-0 top-full mt-1 max-h-48 overflow-y-auto bg-panel-bg border border-border-sec rounded shadow-lg z-50"
+                  >
+                    {customers.map((cust, idx) => (
+                      <button
+                        key={cust.id}
+                        type="button"
+                        onClick={() => handleSelectCustomer(cust)}
+                        className={`w-full text-left px-3 py-2 text-app-sm hover:bg-border-acc/10 active:bg-border-acc/25 transition-colors border-b border-border-sec/40 last:border-b-0 text-text-main flex flex-col cursor-pointer ${idx === activeCustIdx ? 'bg-emerald-light' : ''}`}
+                      >
+                        <span className="font-bold">{cust.name}</span>
+                        {cust.mobileNo && <span className="text-[10px] text-text-mute">Mob: {cust.mobileNo}</span>}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
 
               {/* Mobile No */}

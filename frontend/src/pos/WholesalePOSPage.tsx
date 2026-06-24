@@ -4,6 +4,7 @@ import { InvoiceSidebar } from '../sidebar';
 import type { MasterForm } from '../sidebar';
 import { Link } from 'react-router-dom';
 import { AddProductModal } from '../AddProductModal';
+import { createInvoice, fetchNextInvoiceNumber } from '../apiUtils/invoicesApi';
 
 // Import local POS components
 import { POSProductGrid } from './POSProductGrid';
@@ -40,18 +41,24 @@ export default function WholesalePOSPage({ form, setForm, darkMode, toggleDarkMo
   // Categories list
   const categories = ['All', 'Rice', 'Oil', 'Flour', 'Salt', 'Pulses'];
 
-  // Fetch products from backend on mount
+  // Fetch products and next invoice number from backend on mount
   useEffect(() => {
-    async function loadProducts() {
+    async function loadInitialData() {
       try {
         const data = await fetchProducts();
         setProducts(data);
       } catch (err) {
         console.error("Error loading products:", err);
       }
+      try {
+        const nextNo = await fetchNextInvoiceNumber();
+        setForm(prev => ({ ...prev, invoiceNo: nextNo }));
+      } catch (err) {
+        console.error("Error loading next invoice number:", err);
+      }
     }
-    loadProducts();
-  }, []);
+    loadInitialData();
+  }, [setForm]);
 
   // Filter products based on search and category
   const filteredProducts = useMemo(() => {
@@ -130,8 +137,103 @@ export default function WholesalePOSPage({ form, setForm, darkMode, toggleDarkMo
     };
   }, [cart]);
 
-  const handleAction = (type: string) => {
-    alert(`${type} triggered successfully!\n\nCustomer: ${form.name || 'Walk-in'}\nTotal Items: ${totals.totalItems}\nGrand Total: INR ${totals.grandTotal}`);
+  const handleAction = async (type: string) => {
+    if (cart.length === 0) {
+      alert("Cart is empty.");
+      return;
+    }
+
+    try {
+      const items = cart.map((item, index) => {
+        const quantity = item.quantity;
+        const product = item.product;
+        const priceWithGst = product.price;
+        const gstPct = product.gstPercent;
+        const rate = priceWithGst / (1 + gstPct / 100);
+        const net = quantity * priceWithGst;
+        const netWt = quantity * (product.defaultWeight || 0);
+
+        return {
+          srNo: index + 1,
+          id: product.id,
+          name: product.name,
+          hsn: product.hsn,
+          quantity,
+          uom: product.uom,
+          price: priceWithGst,
+          netWt,
+          rate,
+          netRate: rate,
+          gstPercent: gstPct,
+          net
+        };
+      });
+
+      // Calculate taxable amount and tax amount
+      let taxableAmountSum = 0;
+      let taxAmountSum = 0;
+      items.forEach(item => {
+        const lineTaxable = item.rate * item.quantity;
+        taxableAmountSum += lineTaxable;
+        taxAmountSum += (item.net - lineTaxable);
+      });
+
+      await createInvoice({
+        masterForm: {
+          ...form,
+          name: form.name || 'Walk-in',
+          invoiceDate: form.invoiceDate || new Date().toISOString().split('T')[0]
+        },
+        items,
+        totals: {
+          taxableAmount: parseFloat(taxableAmountSum.toFixed(2)),
+          taxAmount: parseFloat(taxAmountSum.toFixed(2)),
+          netTotal: parseFloat(totals.grandTotal)
+        }
+      });
+
+      alert(`${type} completed successfully!\n\nCustomer: ${form.name || 'Walk-in'}\nTotal Items: ${totals.totalItems}\nGrand Total: INR ${totals.grandTotal}`);
+      
+      // Clear cart on success
+      setCart([]);
+
+      // Fetch the next invoice number from database
+      try {
+        const nextNo = await fetchNextInvoiceNumber();
+        setForm(prev => ({
+          ...prev,
+          invoiceNo: nextNo,
+          invoiceDate: new Date().toISOString().split('T')[0]
+        }));
+      } catch (err) {
+        console.error("Error loading next invoice number:", err);
+      }
+    } catch (error: any) {
+      console.error(error);
+      alert(`Failed to complete action: ${error.message || error}`);
+    }
+  };
+
+  const handleEraseAll = () => {
+    if (window.confirm("Are you sure you want to erase all data from the POS screen?")) {
+      setCart([]);
+      setForm({
+        name: '',
+        mobileNo: '',
+        remarks: '',
+        invoiceNo: 'NHW-2627-0001',
+        invoiceDate: new Date().toISOString().split('T')[0],
+        balance: '',
+        pan: '',
+        gst: '',
+        gstType: 'CGST/SGST',
+        city: '',
+        state: '',
+        country: '',
+        billTo: '',
+        customerId: ''
+      });
+    }
   };
 
   // Global Keyboard listener matching invoice page standard
@@ -139,7 +241,7 @@ export default function WholesalePOSPage({ form, setForm, darkMode, toggleDarkMo
     const handleGlobalKeyDown = (e: KeyboardEvent) => {
       if (e.altKey && e.key.toLowerCase() === 'e') {
         e.preventDefault();
-        setCart([]);
+        handleEraseAll();
       }
       if (e.ctrlKey && e.key.toLowerCase() === 'b') {
         e.preventDefault();
@@ -270,6 +372,14 @@ export default function WholesalePOSPage({ form, setForm, darkMode, toggleDarkMo
               onClick={toggleDarkMode}
             >
               {darkMode ? '☀️ Light' : '🌙 Dark'}
+            </button>
+
+            <button
+              className="bg-alert hover:opacity-90 text-white rounded text-app-xs font-semibold flex items-center justify-center transition-all h-[26px] px-2 cursor-pointer gap-1"
+              onClick={handleEraseAll}
+              title="Erase POS Screen (Alt + E)"
+            >
+              🗑️ New POS
             </button>
           </div>
         </header>

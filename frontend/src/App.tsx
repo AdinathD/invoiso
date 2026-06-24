@@ -17,7 +17,8 @@ const INITIAL_FORM: MasterForm = {
   city: '',
   state: '',
   country: '',
-  billTo: ''
+  billTo: '',
+  customerId: ''
 };
 
 export default function App() {

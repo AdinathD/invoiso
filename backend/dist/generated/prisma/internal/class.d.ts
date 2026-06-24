@@ -122,6 +122,39 @@ export interface PrismaClient<in LogOpts extends Prisma.LogLevel = never, in out
     get product(): Prisma.ProductDelegate<ExtArgs, {
         omit: OmitOpts;
     }>;
+    /**
+     * `prisma.invoice`: Exposes CRUD operations for the **Invoice** model.
+      * Example usage:
+      * ```ts
+      * // Fetch zero or more Invoices
+      * const invoices = await prisma.invoice.findMany()
+      * ```
+      */
+    get invoice(): Prisma.InvoiceDelegate<ExtArgs, {
+        omit: OmitOpts;
+    }>;
+    /**
+     * `prisma.invoiceItem`: Exposes CRUD operations for the **InvoiceItem** model.
+      * Example usage:
+      * ```ts
+      * // Fetch zero or more InvoiceItems
+      * const invoiceItems = await prisma.invoiceItem.findMany()
+      * ```
+      */
+    get invoiceItem(): Prisma.InvoiceItemDelegate<ExtArgs, {
+        omit: OmitOpts;
+    }>;
+    /**
+     * `prisma.customer`: Exposes CRUD operations for the **Customer** model.
+      * Example usage:
+      * ```ts
+      * // Fetch zero or more Customers
+      * const customers = await prisma.customer.findMany()
+      * ```
+      */
+    get customer(): Prisma.CustomerDelegate<ExtArgs, {
+        omit: OmitOpts;
+    }>;
 }
 export declare function getPrismaClientClass(dirname: string): PrismaClientConstructor;
 //# sourceMappingURL=class.d.ts.map

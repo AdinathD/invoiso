@@ -21,3 +21,91 @@ model Product {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 }
+
+model Invoice {
+  id String @id @default(uuid())
+
+  invoiceNo   String   @unique
+  invoiceDate DateTime
+
+  customerId     String?
+  customer       Customer? @relation(fields: [customerId], references: [id], onDelete: SetNull)
+
+  customerName   String
+  customerMobile String?
+
+  remarks String?
+  balance String?
+  pan     String?
+  gstin   String?
+  gstType String?
+
+  city    String?
+  state   String?
+  country String?
+  billTo  String?
+
+  hamali  Decimal @default(0.00) @db.Decimal(12, 2)
+  freight Decimal @default(0.00) @db.Decimal(12, 2)
+
+  taxableAmount Decimal @db.Decimal(12, 2)
+  taxAmount     Decimal @db.Decimal(12, 2)
+  netTotal      Decimal @db.Decimal(12, 2)
+
+  items InvoiceItem[]
+
+  createdAt DateTime @default(now())
+}
+
+model InvoiceItem {
+  id String @id @default(uuid())
+
+  invoiceId String
+  invoice   Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  productId String?
+
+  srNo Int
+
+  name String
+  hsn  String
+
+  quantity Decimal @db.Decimal(12, 3)
+  uom      String
+
+  price Decimal @db.Decimal(12, 2)
+  netWt Decimal @db.Decimal(12, 3)
+
+  rate    Decimal @db.Decimal(12, 2)
+  netRate Decimal @db.Decimal(12, 2)
+
+  gstPercent Decimal @db.Decimal(5, 2)
+
+  net Decimal @db.Decimal(12, 2)
+}
+
+model Customer {
+  id          String   @id @default(uuid())
+
+  name        String
+  mobileNo    String?
+
+  remarks     String?
+  balance     String?
+
+  pan         String?
+  gstType     String?
+  gstin       String?
+
+  city        String?
+  state       String?
+  country     String?
+
+  billTo      String?
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  invoices    Invoice[]
+}
+

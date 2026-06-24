@@ -9,6 +9,7 @@ import { Link } from 'react-router-dom';
 import type { Product, TableItem, ColumnConfig } from './types';
 import { fetchProducts } from '../apiUtils/productsApi';
 import { AddProductModal } from '../AddProductModal';
+import { createInvoice, fetchNextInvoiceNumber } from '../apiUtils/invoicesApi';
 
 interface InvoicePageProps {
   form: MasterForm;
@@ -22,18 +23,24 @@ export default function InvoicePage({ form, setForm, darkMode, toggleDarkMode }:
   const [products, setProducts] = useState<Product[]>([]);
   const [isAddProductModalOpen, setIsAddProductModalOpen] = useState(false);
 
-  // Fetch products from backend on mount
+  // Fetch products and next invoice number from backend on mount
   useEffect(() => {
-    async function loadProducts() {
+    async function loadInitialData() {
       try {
         const data = await fetchProducts();
         setProducts(data);
       } catch (err) {
         console.error("Error loading products:", err);
       }
+      try {
+        const nextNo = await fetchNextInvoiceNumber();
+        setForm(prev => ({ ...prev, invoiceNo: nextNo }));
+      } catch (err) {
+        console.error("Error loading next invoice number:", err);
+      }
     }
-    loadProducts();
-  }, []);
+    loadInitialData();
+  }, [setForm]);
 
   const [columnConfig, setColumnConfig] = useState<ColumnConfig>(() => {
     try {
@@ -108,7 +115,8 @@ export default function InvoicePage({ form, setForm, darkMode, toggleDarkMode }:
         city: '',
         state: '',
         country: '',
-        billTo: ''
+        billTo: '',
+        customerId: ''
       });
       setHamali('0.00');
       setFreight('0.00');
@@ -120,6 +128,11 @@ export default function InvoicePage({ form, setForm, darkMode, toggleDarkMode }:
       setNote('');
       setSalesNotes('Enter sales notes here...');
       setRoundOff('0.00');
+    }
+  };
+  const handleClearCart = () => {
+    if (window.confirm("Are you sure you want to clear all products from the cart?")) {
+      setItems([]);
     }
   };
 
@@ -301,24 +314,39 @@ export default function InvoicePage({ form, setForm, darkMode, toggleDarkMode }:
     };
   }, [items, hamali, freight, discPercent, roundOff]);
 
-  const handleSaveInvoice = () => {
-    alert(`Invoice Saved Successfully!\n\nInvoice No: ${form.invoiceNo}\nTotal Items: ${totals.itemsCount}\nNet Total: INR ${totals.netTotal}`);
+  const handleSaveInvoice = async () => {
+    try {
+      await createInvoice({
+        masterForm: form,
+        items,
+        totals: {
+          taxableAmount: parseFloat(totals.taxableAmount),
+          taxAmount: parseFloat(totals.taxAmount),
+          netTotal: parseFloat(totals.netTotal),
+        },
+        hamali: parseFloat(hamali) || 0,
+        freight: parseFloat(freight) || 0,
+      });
 
-    const match = form.invoiceNo.match(/^(.*-)(\d+)$/);
-    if (match) {
-      const prefix = match[1];
-      const nextNum = parseInt(match[2], 10) + 1;
-      const nextInvoiceNo = `${prefix}${String(nextNum).padStart(match[2].length, '0')}`;
-      setForm(prev => ({
-        ...prev,
-        invoiceNo: nextInvoiceNo,
-        invoiceDate: new Date().toISOString().split('T')[0]
-      }));
-    } else {
-      setForm(prev => ({
-        ...prev,
-        invoiceDate: new Date().toISOString().split('T')[0]
-      }));
+      alert(`Invoice Saved Successfully!\n\nInvoice No: ${form.invoiceNo}\nTotal Items: ${totals.itemsCount}\nNet Total: INR ${totals.netTotal}`);
+
+      // Clear the items grid on success
+      setItems([]);
+
+      // Fetch the next invoice number from database
+      try {
+        const nextNo = await fetchNextInvoiceNumber();
+        setForm(prev => ({
+          ...prev,
+          invoiceNo: nextNo,
+          invoiceDate: new Date().toISOString().split('T')[0]
+        }));
+      } catch (err) {
+        console.error("Error loading next invoice number:", err);
+      }
+    } catch (error: any) {
+      console.error(error);
+      alert(`Failed to save invoice: ${error.message || error}`);
     }
   };
 
@@ -373,10 +401,17 @@ export default function InvoicePage({ form, setForm, darkMode, toggleDarkMode }:
               </button>
               <button
                 className="bg-alert hover:opacity-90 text-white rounded text-app-base font-semibold flex items-center justify-center transition-all h-5 px-2 cursor-pointer gap-1"
+                onClick={handleClearCart}
+                title="Clear all products from the table"
+              >
+                🛒 Clear Cart
+              </button>
+              <button
+                className="bg-alert hover:opacity-90 text-white rounded text-app-base font-semibold flex items-center justify-center transition-all h-5 px-2 cursor-pointer gap-1"
                 onClick={handleEraseAll}
                 title="Erase all data (Alt + E)"
               >
-                🗑️ Erase Screen
+                🗑️ New Invoice
               </button>
             </div>
           </div>
