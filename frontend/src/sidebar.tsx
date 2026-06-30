@@ -1,9 +1,9 @@
 import React from 'react';
-import { User, Phone, Clipboard, Menu, X, Settings } from 'lucide-react';
+import { User, Phone, Clipboard, Menu, X, Settings, History, ChevronDown, ChevronUp } from 'lucide-react';
 import { handleEnterTraversal } from './keyboardUtils.ts';
 import type { ColumnConfig } from './invoice/types';
-import { fetchCustomers } from './apiUtils/customersApi';
-import type { Customer } from './apiUtils/customersApi';
+import { fetchCustomers, fetchCustomerDetails } from './apiUtils/customersApi';
+import type { Customer, CustomerWithInvoices } from './apiUtils/customersApi';
 
 export interface MasterForm {
   name: string;
@@ -43,6 +43,28 @@ export const MasterHeader: React.FC<MasterHeaderProps> = ({
   const [dropdownOpen, setDropdownOpen] = React.useState(false);
   const dropdownRef = React.useRef<HTMLDivElement>(null);
 
+  const [historyOpen, setHistoryOpen] = React.useState(false);
+  const [historyLoading, setHistoryLoading] = React.useState(false);
+  const [customerHistory, setCustomerHistory] = React.useState<CustomerWithInvoices | null>(null);
+  const [historyError, setHistoryError] = React.useState('');
+  const [expandedInvoiceId, setExpandedInvoiceId] = React.useState<string | null>(null);
+
+  const handleOpenHistory = async () => {
+    if (!form.customerId) return;
+    setHistoryOpen(true);
+    setHistoryLoading(true);
+    setHistoryError('');
+    try {
+      const details = await fetchCustomerDetails(form.customerId);
+      setCustomerHistory(details);
+    } catch (err: any) {
+      console.error(err);
+      setHistoryError(err.message || 'Failed to load customer history');
+    } finally {
+      setHistoryLoading(false);
+    }
+  };
+
   React.useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -52,6 +74,7 @@ export const MasterHeader: React.FC<MasterHeaderProps> = ({
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
 
   return (
     <div className="border border-border-acc rounded p-2 mb-2 transition-colors duration-150 relative flex flex-col sm:flex-row gap-2 sm:items-center justify-between bg-panel-bg text-text-main">
@@ -200,10 +223,184 @@ export const MasterHeader: React.FC<MasterHeaderProps> = ({
             </span>
           </div>
         )}
+        {form.customerId && (
+          <button
+            onClick={handleOpenHistory}
+            className="flex items-center gap-1 ml-1 px-2 py-0.5 bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 hover:bg-emerald-600 hover:text-white rounded text-[10px] font-bold transition-all shadow-sm cursor-pointer"
+            title="View customer invoice history"
+          >
+            <History size={11} />
+            <span>History</span>
+          </button>
+        )}
       </div>
+
+      {/* History Modal */}
+      {historyOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-md p-4 text-text-main">
+          <div
+            className="w-full max-w-3xl bg-panel-bg border border-border-sec rounded-xl shadow-2xl overflow-hidden relative animate-in fade-in zoom-in-95 duration-200 flex flex-col max-h-[85vh]"
+            onClick={e => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="flex justify-between items-center px-5 py-4 border-b border-border-sec bg-border-sec/10">
+              <div className="flex items-center gap-2">
+                <History size={18} className="text-text-acc" />
+                <h2 className="text-app-lg font-bold text-text-main">
+                  Customer Invoice History
+                </h2>
+              </div>
+              <button
+                onClick={() => setHistoryOpen(false)}
+                className="p-1 rounded-md text-text-mute hover:bg-border-sec hover:text-text-main transition-colors cursor-pointer"
+                aria-label="Close modal"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="p-5 overflow-y-auto space-y-4 flex-1">
+              {historyLoading ? (
+                <div className="flex flex-col items-center justify-center py-12 gap-2">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-text-acc"></div>
+                  <p className="text-app-sm text-text-mute">Loading invoice history...</p>
+                </div>
+              ) : historyError ? (
+                <div className="p-4 text-app-sm text-alert bg-alert/10 border border-alert/20 rounded-lg">
+                  ⚠️ {historyError}
+                </div>
+              ) : customerHistory ? (
+                <div className="space-y-4">
+                  {/* Customer Info Card */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-app-bg/50 p-4 rounded-lg border border-border-sec/40">
+                    <div>
+                      <h3 className="text-app-base font-extrabold text-text-acc">{customerHistory.name}</h3>
+                      <p className="text-app-sm text-text-mute">Mobile: {customerHistory.mobileNo || 'N/A'}</p>
+                      <p className="text-app-sm text-text-mute">GSTIN: {customerHistory.gstin || 'N/A'} ({customerHistory.gstType || 'N/A'})</p>
+                    </div>
+                    <div>
+                      <p className="text-app-sm text-text-mute">City/State: {customerHistory.city || 'N/A'}, {customerHistory.state || 'N/A'}</p>
+                      <p className="text-app-sm text-text-mute">Address: {customerHistory.billTo || 'N/A'}</p>
+                      <p className="text-app-sm text-text-mute font-semibold">Balance: {customerHistory.balance || '0.00'}</p>
+                    </div>
+                  </div>
+
+                  {/* Invoices List */}
+                  <div>
+                    <h4 className="text-app-sm font-bold text-text-main mb-2">Invoices ({customerHistory.invoices.length})</h4>
+                    {customerHistory.invoices.length === 0 ? (
+                      <div className="text-center py-8 bg-app-bg/30 rounded-lg border border-dashed border-border-sec/40 text-text-mute text-app-sm">
+                        No invoice history found for this customer.
+                      </div>
+                    ) : (
+                      <div className="overflow-x-auto border border-border-sec rounded-lg">
+                        <table className="w-full text-left border-collapse text-app-sm">
+                          <thead>
+                            <tr className="bg-app-bg border-b border-border-sec font-bold text-text-sec">
+                              <th className="p-2.5">Invoice No</th>
+                              <th className="p-2.5">Date</th>
+                              <th className="p-2.5 text-right">Taxable Amt</th>
+                              <th className="p-2.5 text-right">Tax Amt</th>
+                              <th className="p-2.5 text-right">Net Total</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-border-sec/40">
+                            {customerHistory.invoices.map((inv) => {
+                              const isExpanded = expandedInvoiceId === inv.id;
+                              return (
+                                <React.Fragment key={inv.id}>
+                                  <tr
+                                    onClick={() => setExpandedInvoiceId(isExpanded ? null : inv.id)}
+                                    className="hover:bg-app-bg/30 cursor-pointer transition-colors"
+                                  >
+                                    <td className="p-2.5 font-bold text-text-acc flex items-center gap-1.5">
+                                      {isExpanded ? <ChevronUp size={14} className="text-text-acc" /> : <ChevronDown size={14} className="text-text-mute" />}
+                                      <span>{inv.invoiceNo}</span>
+                                    </td>
+                                    <td className="p-2.5 text-text-mute">
+                                      {new Date(inv.invoiceDate).toLocaleDateString()}
+                                    </td>
+                                    <td className="p-2.5 text-right font-mono">₹{Number(inv.taxableAmount).toFixed(2)}</td>
+                                    <td className="p-2.5 text-right font-mono">₹{Number(inv.taxAmount).toFixed(2)}</td>
+                                    <td className="p-2.5 text-right font-bold font-mono text-emerald-500">₹{Number(inv.netTotal).toFixed(2)}</td>
+                                  </tr>
+                                  {isExpanded && (
+                                    <tr className="bg-app-bg/50">
+                                      <td colSpan={5} className="p-3">
+                                        <div className="bg-panel-bg border border-border-sec/80 rounded-lg p-3 shadow-inner space-y-2">
+                                          <h5 className="text-xs font-extrabold uppercase text-text-acc tracking-wider flex items-center gap-1.5 border-b border-border-sec pb-1.5">
+                                            <span>📦 Invoice Items</span>
+                                            <span className="text-[10px] text-text-mute normal-case font-normal">(Invoice: {inv.invoiceNo})</span>
+                                          </h5>
+                                          {!inv.items || inv.items.length === 0 ? (
+                                            <p className="text-xs text-text-mute">No items found for this invoice.</p>
+                                          ) : (
+                                            <div className="overflow-x-auto">
+                                              <table className="w-full text-left border-collapse text-xs">
+                                                <thead>
+                                                  <tr className="border-b border-border-sec/60 text-text-sec font-bold">
+                                                    <th className="py-1 px-2 text-center w-8">#</th>
+                                                    <th className="py-1 px-2">Item Name</th>
+                                                    <th className="py-1 px-2">HSN</th>
+                                                    <th className="py-1 px-2 text-right">Qty</th>
+                                                    <th className="py-1 px-2 text-center">UOM</th>
+                                                    <th className="py-1 px-2 text-right">Price</th>
+                                                    <th className="py-1 px-2 text-right">Net Wt</th>
+                                                    <th className="py-1 px-2 text-right">GST %</th>
+                                                    <th className="py-1 px-2 text-right font-semibold">Net</th>
+                                                  </tr>
+                                                </thead>
+                                                <tbody className="divide-y divide-border-sec/30">
+                                                  {inv.items.map((item) => (
+                                                    <tr key={item.id} className="hover:bg-app-bg/20">
+                                                      <td className="py-1.5 px-2 text-center text-text-mute">{item.srNo}</td>
+                                                      <td className="py-1.5 px-2 font-medium text-text-main">{item.name}</td>
+                                                      <td className="py-1.5 px-2 text-text-mute font-mono">{item.hsn}</td>
+                                                      <td className="py-1.5 px-2 text-right font-mono">{Number(item.quantity).toFixed(2)}</td>
+                                                      <td className="py-1.5 px-2 text-center text-text-mute">{item.uom}</td>
+                                                      <td className="py-1.5 px-2 text-right font-mono">₹{Number(item.price).toFixed(2)}</td>
+                                                      <td className="py-1.5 px-2 text-right font-mono">{Number(item.netWt).toFixed(2)}</td>
+                                                      <td className="py-1.5 px-2 text-right font-mono">{Number(item.gstPercent).toFixed(2)}%</td>
+                                                      <td className="py-1.5 px-2 text-right font-bold font-mono text-emerald-500">₹{Number(item.net).toFixed(2)}</td>
+                                                    </tr>
+                                                  ))}
+                                                </tbody>
+                                              </table>
+                                            </div>
+                                          )}
+                                        </div>
+                                      </td>
+                                    </tr>
+                                  )}
+                                </React.Fragment>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ) : null}
+            </div>
+
+            {/* Footer */}
+            <div className="flex justify-end px-5 py-3 border-t border-border-sec bg-border-sec/10">
+              <button
+                onClick={() => setHistoryOpen(false)}
+                className="px-4 py-1.5 bg-border-sec hover:bg-border-sec/80 text-text-main text-app-base font-bold rounded transition-colors cursor-pointer"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
+
 
 interface InvoiceSidebarProps {
   form: MasterForm;

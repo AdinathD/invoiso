@@ -34,6 +34,7 @@ export default function WholesalePOSPage({ form, setForm, darkMode, toggleDarkMo
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [showHelp, setShowHelp] = useState(false);
+  const [discountPercent, setDiscountPercent] = useState<number>(0);
 
   const searchInputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -123,19 +124,20 @@ export default function WholesalePOSPage({ form, setForm, darkMode, toggleDarkMo
       totalWeight += unitWeight * item.quantity;
     });
 
-    const discount = subtotal * 0.02;
+    const discount = subtotal * (discountPercent / 100);
     const grandTotal = subtotal - discount;
+    const finalTaxable = totalTaxable - (totalTaxable * (discountPercent / 100));
 
     return {
       subtotal: subtotal.toFixed(2),
-      taxableAmount: totalTaxable.toFixed(2),
+      taxableAmount: finalTaxable.toFixed(2),
       gst: totalGst.toFixed(2),
       discount: discount.toFixed(2),
       totalWeight: totalWeight.toFixed(2),
       totalItems,
       grandTotal: grandTotal.toFixed(2)
     };
-  }, [cart]);
+  }, [cart, discountPercent]);
 
   const handleAction = async (type: string) => {
     if (cart.length === 0) {
@@ -186,14 +188,14 @@ export default function WholesalePOSPage({ form, setForm, darkMode, toggleDarkMo
         },
         items,
         totals: {
-          taxableAmount: parseFloat(taxableAmountSum.toFixed(2)),
+          taxableAmount: parseFloat((taxableAmountSum - (taxableAmountSum * (discountPercent / 100))).toFixed(2)),
           taxAmount: parseFloat(taxAmountSum.toFixed(2)),
           netTotal: parseFloat(totals.grandTotal)
         }
       });
 
       alert(`${type} completed successfully!\n\nCustomer: ${form.name || 'Walk-in'}\nTotal Items: ${totals.totalItems}\nGrand Total: INR ${totals.grandTotal}`);
-      
+
       // Clear cart on success
       setCart([]);
 
@@ -214,14 +216,20 @@ export default function WholesalePOSPage({ form, setForm, darkMode, toggleDarkMo
     }
   };
 
-  const handleEraseAll = () => {
+  const handleEraseAll = async () => {
     if (window.confirm("Are you sure you want to erase all data from the POS screen?")) {
       setCart([]);
+      let nextNo = 'NHW-2627-0001';
+      try {
+        nextNo = await fetchNextInvoiceNumber();
+      } catch (err) {
+        console.error("Error loading next invoice number:", err);
+      }
       setForm({
         name: '',
         mobileNo: '',
         remarks: '',
-        invoiceNo: 'NHW-2627-0001',
+        invoiceNo: nextNo,
         invoiceDate: new Date().toISOString().split('T')[0],
         balance: '',
         pan: '',
@@ -239,9 +247,15 @@ export default function WholesalePOSPage({ form, setForm, darkMode, toggleDarkMo
   // Global Keyboard listener matching invoice page standard
   useEffect(() => {
     const handleGlobalKeyDown = (e: KeyboardEvent) => {
-      if (e.altKey && e.key.toLowerCase() === 'e') {
+      if (e.altKey && (e.key.toLowerCase() === 'e' || e.key.toLowerCase() === 'n')) {
         e.preventDefault();
         handleEraseAll();
+      }
+      if (e.altKey && e.key.toLowerCase() === 'c') {
+        e.preventDefault();
+        if (window.confirm("Are you sure you want to clear all products from the cart?")) {
+          setCart([]);
+        }
       }
       if (e.ctrlKey && e.key.toLowerCase() === 'b') {
         e.preventDefault();
@@ -377,7 +391,7 @@ export default function WholesalePOSPage({ form, setForm, darkMode, toggleDarkMo
             <button
               className="bg-alert hover:opacity-90 text-white rounded text-app-xs font-semibold flex items-center justify-center transition-all h-[26px] px-2 cursor-pointer gap-1"
               onClick={handleEraseAll}
-              title="Erase POS Screen (Alt + E)"
+              title="Erase POS Screen (Alt + N / Alt + E)"
             >
               🗑️ New POS
             </button>
@@ -406,6 +420,8 @@ export default function WholesalePOSPage({ form, setForm, darkMode, toggleDarkMo
             onUpdateQty={handleUpdateQty}
             onRemoveItem={handleRemoveFromCart}
             onClearCart={() => setCart([])}
+            discountPercent={discountPercent}
+            onDiscountPercentChange={setDiscountPercent}
             totals={totals}
             onSaveDraft={() => handleAction('Save')}
             onSavePrint={() => handleAction('Save & Print')}
@@ -466,7 +482,11 @@ export default function WholesalePOSPage({ form, setForm, darkMode, toggleDarkMo
                   <h3 className="text-app-sm font-black tracking-wider uppercase text-text-mute mb-2">Actions</h3>
                   <div className="flex justify-between items-center border-b border-border-main/30 py-1">
                     <span className="font-bold text-alert">Clear Cart</span>
-                    <kbd className="bg-app-bg border border-border-sec rounded px-2 py-0.5 font-mono text-app-sm font-black text-alert">Alt + E</kbd>
+                    <kbd className="bg-app-bg border border-border-sec rounded px-2 py-0.5 font-mono text-app-sm font-black text-alert">Alt + C</kbd>
+                  </div>
+                  <div className="flex justify-between items-center border-b border-border-main/30 py-1">
+                    <span className="font-bold text-text-main">New POS / Erase</span>
+                    <kbd className="bg-app-bg border border-border-sec rounded px-2 py-0.5 font-mono text-app-sm font-black text-text-acc">Alt + N / E</kbd>
                   </div>
                   <div className="flex justify-between items-center border-b border-border-main/30 py-1">
                     <span className="font-bold text-text-main">Settle Payment</span>

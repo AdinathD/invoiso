@@ -15,3 +15,12 @@ export async function fetchNextInvoiceNumber(): Promise<string> {
   const res = await axios.get(`${BACKEND_URL}/api/invoices/next-number`);
   return res.data.nextInvoiceNo;
 }
+
+export async function fetchInvoices(date?: string): Promise<any[]> {
+  const url = date 
+    ? `${BACKEND_URL}/api/invoices?date=${encodeURIComponent(date)}`
+    : `${BACKEND_URL}/api/invoices`;
+  const res = await axios.get(url);
+  return res.data;
+}
+

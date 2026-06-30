@@ -130,10 +130,17 @@ export const AddProductForm: React.FC<AddProductFormProps> = ({
     handleEnterTraversal(e, containerRef.current);
   };
 
+  const handleBlur = (e: React.FocusEvent) => {
+    if (containerRef.current && !containerRef.current.contains(e.relatedTarget as Node)) {
+      setShowDropdown(false);
+    }
+  };
+
   return (
     <div
       ref={containerRef}
       onKeyDown={handleKeyDown}
+      onBlur={handleBlur}
       className="border border-border-acc/20 rounded p-1 mb-1 transition-all duration-300 shadow-sm bg-panel-bg text-text-main"
     >
       <div className="grid grid-cols-12 gap-1 items-end">
@@ -172,6 +179,7 @@ export const AddProductForm: React.FC<AddProductFormProps> = ({
                   aria-selected={idx === activeIdx}
                   key={p.id}
                   className={`p-1.5 cursor-pointer border-b border-border-main text-app-sm transition-colors ${idx === activeIdx ? 'bg-emerald-light' : 'hover:bg-emerald-light'}`}
+                  onMouseDown={(e) => e.preventDefault()}
                   onClick={() => {
                     handleSelectProduct(p);
                     setActiveIdx(-1);

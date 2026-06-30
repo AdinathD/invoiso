@@ -99,14 +99,20 @@ export default function InvoicePage({ form, setForm, darkMode, toggleDarkMode }:
   const [showHelp, setShowHelp] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
-  const handleEraseAll = () => {
+  const handleEraseAll = async () => {
     if (window.confirm("Are you sure you want to erase all data from the screen?")) {
       setItems([]);
+      let nextNo = 'NHW-2627-0001';
+      try {
+        nextNo = await fetchNextInvoiceNumber();
+      } catch (err) {
+        console.error("Error loading next invoice number:", err);
+      }
       setForm({
         name: '',
         mobileNo: '',
         remarks: '',
-        invoiceNo: 'NHW-2627-0001',
+        invoiceNo: nextNo,
         invoiceDate: new Date().toISOString().split('T')[0],
         balance: '',
         pan: '',
@@ -141,6 +147,10 @@ export default function InvoicePage({ form, setForm, darkMode, toggleDarkMode }:
       if (e.altKey && e.key.toLowerCase() === 'e') {
         e.preventDefault();
         handleEraseAll();
+      }
+      if (e.altKey && e.key.toLowerCase() === 'c') {
+        e.preventDefault();
+        handleClearCart();
       }
       if (e.ctrlKey && e.key.toLowerCase() === 'b') {
         e.preventDefault();
@@ -387,6 +397,12 @@ export default function InvoicePage({ form, setForm, darkMode, toggleDarkMode }:
               >
                 🖥️ Switch to Wholesale POS
               </Link>
+              <Link
+                to="/invoices"
+                className="px-2 py-1 bg-border-acc/20 hover:bg-border-acc/35 text-text-acc text-app-xs font-extrabold rounded border border-border-acc/40 transition-all cursor-pointer flex items-center gap-1"
+              >
+                📄 View Invoices
+              </Link>
               <button
                 className="px-2 py-1 bg-text-acc/10 hover:bg-text-acc/25 text-text-acc text-app-xs font-extrabold rounded border border-text-acc/40 transition-all cursor-pointer"
                 onClick={() => setIsAddProductModalOpen(true)}
@@ -402,7 +418,7 @@ export default function InvoicePage({ form, setForm, darkMode, toggleDarkMode }:
               <button
                 className="bg-alert hover:opacity-90 text-white rounded text-app-base font-semibold flex items-center justify-center transition-all h-5 px-2 cursor-pointer gap-1"
                 onClick={handleClearCart}
-                title="Clear all products from the table"
+                title="Clear all products from the table (Alt + C)"
               >
                 🛒 Clear Cart
               </button>
@@ -549,6 +565,10 @@ export default function InvoicePage({ form, setForm, darkMode, toggleDarkMode }:
                     <kbd className="bg-app-bg border border-border-sec rounded px-2 py-0.5 font-mono text-app-sm font-black text-alert">Alt + E</kbd>
                   </div>
                   <div className="flex justify-between items-center border-b border-border-main/30 py-1">
+                    <span className="font-bold text-alert">Clear Cart</span>
+                    <kbd className="bg-app-bg border border-border-sec rounded px-2 py-0.5 font-mono text-app-sm font-black text-alert">Alt + C</kbd>
+                  </div>
+                  <div className="flex justify-between items-center border-b border-border-main/30 py-1">
                     <span className="font-bold text-text-main">Summary</span>
                     <kbd className="bg-app-bg border border-border-sec rounded px-2 py-0.5 font-mono text-app-sm font-black">Ctrl + G / J</kbd>
                   </div>
@@ -599,7 +619,7 @@ export default function InvoicePage({ form, setForm, darkMode, toggleDarkMode }:
       <AddProductModal
         isOpen={isAddProductModalOpen}
         onClose={() => setIsAddProductModalOpen(false)}
-        onProductAdded={(newProduct) => setProducts(prev => [...prev, newProduct])}
+        onProductAdded={(newProduct) => setProducts(prev => [...prev, newProduct as Product])}
       />
     </div>
   );

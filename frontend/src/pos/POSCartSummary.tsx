@@ -7,6 +7,8 @@ interface POSCartSummaryProps {
   onUpdateQty: (productId: string, amount: number) => void;
   onRemoveItem: (productId: string) => void;
   onClearCart: () => void;
+  discountPercent: number;
+  onDiscountPercentChange: (pct: number) => void;
   totals: {
     subtotal: string;
     taxableAmount: string;
@@ -26,6 +28,8 @@ export const POSCartSummary: React.FC<POSCartSummaryProps> = ({
   onUpdateQty,
   onRemoveItem,
   onClearCart,
+  discountPercent,
+  onDiscountPercentChange,
   totals,
   onSaveDraft,
   onSavePrint,
@@ -192,8 +196,19 @@ export const POSCartSummary: React.FC<POSCartSummaryProps> = ({
             <span>GST</span>
             <span className="font-bold text-text-main">₹{totals.gst}</span>
           </div>
-          <div className="flex justify-between text-text-acc">
-            <span>Discount (2%)</span>
+          <div className="flex justify-between items-center text-text-acc gap-1">
+            <span className="flex items-center gap-1">
+              Discount (%)
+              <input
+                type="number"
+                min="0"
+                max="100"
+                step="0.5"
+                value={discountPercent}
+                onChange={(e) => onDiscountPercentChange(parseFloat(e.target.value) || 0)}
+                className="w-10 text-center border border-border-sec rounded bg-panel-bg text-text-acc font-bold text-[0.65rem] h-5 py-0.5 focus:outline-none focus:border-text-acc [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+              />
+            </span>
             <span className="font-bold">-₹{totals.discount}</span>
           </div>
           <div className="col-span-2 flex justify-between border-t border-border-sec/40 pt-1 text-[0.68rem] text-text-mute font-semibold">
