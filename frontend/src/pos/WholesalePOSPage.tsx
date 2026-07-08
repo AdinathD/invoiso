@@ -12,6 +12,8 @@ import { POSCartSummary } from './POSCartSummary';
 import type { POSProduct, CartItem } from './types';
 import { handleEnterTraversal } from '../keyboardUtils';
 import { fetchProducts } from '../apiUtils/productsApi';
+import { PrintInvoiceModal } from '../print/PrintInvoiceModal';
+import type { TableItem } from '../invoice/types';
 
 interface WholesalePOSPageProps {
   form: MasterForm;
@@ -24,9 +26,47 @@ export default function WholesalePOSPage({ form, setForm, darkMode, toggleDarkMo
   // Sidebar State (matches proportion and toggle behavior of InvoicePage)
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
+  // Printing states
+  const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
+  const [printSnapshot, setPrintSnapshot] = useState<{
+    form: MasterForm;
+    items: TableItem[];
+    totals: {
+      itemsCount: number;
+      weightSum: string;
+      quantitySum: string;
+      taxableAmount: string;
+      taxAmount: string;
+      netTotal: string;
+    };
+    hamali: string;
+    freight: string;
+    discPercent: string;
+    salesman: string;
+    vehicleNo: string;
+    transport: string;
+    roundOff: string;
+    note: string;
+  } | null>(null);
+
+
   // POS Products State loaded from JSON
   const [products, setProducts] = useState<POSProduct[]>([]);
   const [isAddProductModalOpen, setIsAddProductModalOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setMenuOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   // POS Cart State
   const [cart, setCart] = useState<CartItem[]>([]);
@@ -196,8 +236,40 @@ export default function WholesalePOSPage({ form, setForm, darkMode, toggleDarkMo
 
       alert(`${type} completed successfully!\n\nCustomer: ${form.name || 'Walk-in'}\nTotal Items: ${totals.totalItems}\nGrand Total: INR ${totals.grandTotal}`);
 
+      // Save a snapshot for printing before clearing the cart
+      if (type === 'Save & Print') {
+        const netWtSum = items.reduce((sum, item) => sum + (item.netWt || 0), 0);
+        const qtySum = items.reduce((sum, item) => sum + (item.quantity || 0), 0);
+        setPrintSnapshot({
+          form: {
+            ...form,
+            name: form.name || 'Walk-in',
+            invoiceDate: form.invoiceDate || new Date().toISOString().split('T')[0]
+          },
+          items,
+          totals: {
+            itemsCount: items.length,
+            weightSum: netWtSum.toFixed(2),
+            quantitySum: qtySum.toFixed(2),
+            taxableAmount: (taxableAmountSum - (taxableAmountSum * (discountPercent / 100))).toFixed(2),
+            taxAmount: taxAmountSum.toFixed(2),
+            netTotal: parseFloat(totals.grandTotal).toFixed(2)
+          },
+          hamali: '0.00',
+          freight: '0.00',
+          discPercent: discountPercent.toString(),
+          salesman: '-- Select --',
+          vehicleNo: '',
+          transport: '',
+          roundOff: '0.00',
+          note: form.remarks || ''
+        });
+        setIsPrintModalOpen(true);
+      }
+
       // Clear cart on success
       setCart([]);
+
 
       // Fetch the next invoice number from database
       try {
@@ -366,20 +438,48 @@ export default function WholesalePOSPage({ form, setForm, darkMode, toggleDarkMo
               <div className="border-l border-border-sec h-3 pl-3">Inv: <strong>{form.invoiceNo}</strong></div>
             </div>
 
-            <Link
-              to="/"
-              className="flex items-center gap-1 px-3 py-1 bg-border-sec/40 hover:bg-border-sec/60 text-text-sec hover:text-text-main text-app-xs font-extrabold rounded border border-border-sec transition-all cursor-pointer"
-            >
-              <Home size={12} />
-              <span>Back to Invoice</span>
-            </Link>
-
-            <button
-              className="px-2 py-1 bg-text-acc/10 hover:bg-text-acc/25 text-text-acc text-app-xs font-extrabold rounded border border-text-acc/40 transition-all cursor-pointer"
-              onClick={() => setIsAddProductModalOpen(true)}
-            >
-              ➕ Add Product
-            </button>
+            <div className="relative inline-block text-left" ref={menuRef}>
+              <button
+                onClick={() => setMenuOpen(!menuOpen)}
+                className="px-2 py-1 bg-border-acc/20 hover:bg-border-acc/35 text-text-acc text-app-xs font-extrabold rounded border border-border-acc/40 transition-all cursor-pointer flex items-center gap-1.5"
+              >
+                ⚙️ Quick Actions
+              </button>
+              {menuOpen && (
+                <div className="absolute right-0 mt-1 w-52 bg-panel-bg border border-border-sec rounded-md shadow-lg z-[200] overflow-hidden flex flex-col py-1 text-app-xs">
+                  <Link
+                    to="/"
+                    onClick={() => setMenuOpen(false)}
+                    className="px-3 py-2 text-text-main hover:bg-border-sec/50 transition-colors flex items-center gap-2 font-semibold"
+                  >
+                    <span>🏠</span> Back to Invoice Page
+                  </Link>
+                  <Link
+                    to="/invoices"
+                    onClick={() => setMenuOpen(false)}
+                    className="px-3 py-2 text-text-main hover:bg-border-sec/50 transition-colors flex items-center gap-2 font-semibold"
+                  >
+                    <span>📄</span> View Invoices
+                  </Link>
+                  <Link
+                    to="/analytics"
+                    onClick={() => setMenuOpen(false)}
+                    className="px-3 py-2 text-text-main hover:bg-border-sec/50 transition-colors flex items-center gap-2 font-semibold"
+                  >
+                    <span>📊</span> Analytics
+                  </Link>
+                  <button
+                    onClick={() => {
+                      setIsAddProductModalOpen(true);
+                      setMenuOpen(false);
+                    }}
+                    className="px-3 py-2 text-left text-text-main hover:bg-border-sec/50 transition-colors flex items-center gap-2 font-semibold w-full cursor-pointer"
+                  >
+                    <span>➕</span> Add Product
+                  </button>
+                </div>
+              )}
+            </div>
 
             <button
               className="px-2 py-1 rounded text-app-xs font-semibold border border-border-sec bg-text-main text-panel-bg cursor-pointer"
@@ -533,6 +633,28 @@ export default function WholesalePOSPage({ form, setForm, darkMode, toggleDarkMo
         onClose={() => setIsAddProductModalOpen(false)}
         onProductAdded={(newProduct) => setProducts(prev => [...prev, newProduct])}
       />
+
+      {isPrintModalOpen && printSnapshot && (
+        <PrintInvoiceModal
+          isOpen={isPrintModalOpen}
+          onClose={() => {
+            setIsPrintModalOpen(false);
+            setPrintSnapshot(null);
+          }}
+          form={printSnapshot.form}
+          items={printSnapshot.items}
+          totals={printSnapshot.totals}
+          hamali={printSnapshot.hamali}
+          freight={printSnapshot.freight}
+          discPercent={printSnapshot.discPercent}
+          salesman={printSnapshot.salesman}
+          vehicleNo={printSnapshot.vehicleNo}
+          transport={printSnapshot.transport}
+          roundOff={printSnapshot.roundOff}
+          note={printSnapshot.note}
+        />
+      )}
     </div>
   );
 }
+

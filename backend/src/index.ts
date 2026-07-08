@@ -92,6 +92,61 @@ app.get("/api/invoices/next-number", async (req, res) => {
   }
 });
 
+// GET endpoint to fetch all invoices (with optional date query parameter for datewise filtering)
+app.get("/api/invoices", async (req, res) => {
+  try {
+    const { date } = req.query;
+    let whereClause = {};
+
+    if (date) {
+      const dateStr = String(date);
+      const parsedDate = new Date(dateStr);
+      if (!isNaN(parsedDate.getTime())) {
+        const match = dateStr.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+        let startOfDay: Date;
+        let endOfDay: Date;
+        
+        if (match) {
+          const year = parseInt(match[1] || "0", 10);
+          const month = parseInt(match[2] || "1", 10) - 1;
+          const day = parseInt(match[3] || "1", 10);
+          startOfDay = new Date(Date.UTC(year, month, day, 0, 0, 0, 0));
+          endOfDay = new Date(Date.UTC(year, month, day, 23, 59, 59, 999));
+        } else {
+          const year = parsedDate.getUTCFullYear();
+          const month = parsedDate.getUTCMonth();
+          const day = parsedDate.getUTCDate();
+          startOfDay = new Date(Date.UTC(year, month, day, 0, 0, 0, 0));
+          endOfDay = new Date(Date.UTC(year, month, day, 23, 59, 59, 999));
+        }
+
+        whereClause = {
+          invoiceDate: {
+            gte: startOfDay,
+            lte: endOfDay,
+          },
+        };
+      }
+    }
+
+    const invoices = await prisma.invoice.findMany({
+      where: whereClause,
+      include: {
+        items: true,
+        customer: true,
+      },
+      orderBy: {
+        invoiceDate: "desc",
+      },
+    });
+
+    res.json(invoices);
+  } catch (error) {
+    console.error("Error fetching invoices:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
 // POST endpoint to create an invoice and its items
 app.post("/api/invoices", async (req, res) => {
   try {
@@ -239,7 +294,13 @@ app.get("/api/customers/:id", async (req, res) => {
     const { id } = req.params;
     const customer = await prisma.customer.findUnique({
       where: { id },
-      include: { invoices: true }
+      include: {
+        invoices: {
+          include: {
+            items: true
+          }
+        }
+      }
     });
     if (!customer) {
       res.status(404).json({ error: "Customer not found" });
@@ -333,6 +394,256 @@ app.delete("/api/customers/:id", async (req, res) => {
     res.status(500).json({ error: "Internal Server Error" });
   }
 });
+
+// GET endpoint for sales analytics
+app.get("/api/analytics/sales", async (req, res) => {
+  try {
+    const timeframe = (req.query.timeframe as string) || "day";
+
+    const now = new Date();
+    let startDate = new Date();
+    if (timeframe === "month") {
+      startDate = new Date(now.getFullYear(), now.getMonth() - 11, 1);
+    } else if (timeframe === "year") {
+      startDate = new Date(now.getFullYear() - 4, 0, 1);
+    } else {
+      // Default: last 30 days
+      startDate.setDate(now.getDate() - 29);
+      startDate.setHours(0, 0, 0, 0);
+    }
+
+    const invoices = await prisma.invoice.findMany({
+      where: {
+        invoiceDate: {
+          gte: startDate,
+        },
+      },
+      include: {
+        items: true,
+      },
+      orderBy: {
+        invoiceDate: "asc",
+      },
+    });
+
+    let totalRevenue = 0;
+    let totalTaxable = 0;
+    let totalTax = 0;
+
+    invoices.forEach((inv) => {
+      totalRevenue += Number(inv.netTotal);
+      totalTaxable += Number(inv.taxableAmount);
+      totalTax += Number(inv.taxAmount);
+    });
+
+    const totalInvoices = invoices.length;
+    const averageOrderValue = totalInvoices > 0 ? totalRevenue / totalInvoices : 0;
+
+    // Sales over time bucketed by timeframe
+    let salesTrend: Array<{ date: string; revenue: number; tax: number; count: number }> = [];
+
+    if (timeframe === "month") {
+      const monthlyMap: Record<string, { date: string; revenue: number; tax: number; count: number }> = {};
+      for (let i = 11; i >= 0; i--) {
+        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        const year = d.getFullYear();
+        const month = String(d.getMonth() + 1).padStart(2, "0");
+        const dateStr = `${year}-${month}`;
+        monthlyMap[dateStr] = { date: dateStr, revenue: 0, tax: 0, count: 0 };
+      }
+
+      invoices.forEach((inv) => {
+        const invDate = new Date(inv.invoiceDate);
+        const year = invDate.getFullYear();
+        const month = String(invDate.getMonth() + 1).padStart(2, "0");
+        const dateStr = `${year}-${month}`;
+        const entry = monthlyMap[dateStr];
+        if (entry) {
+          entry.revenue += Number(inv.netTotal);
+          entry.tax += Number(inv.taxAmount);
+          entry.count += 1;
+        }
+      });
+      salesTrend = Object.values(monthlyMap).sort((a, b) => a.date.localeCompare(b.date));
+    } else if (timeframe === "year") {
+      const yearlyMap: Record<string, { date: string; revenue: number; tax: number; count: number }> = {};
+      for (let i = 4; i >= 0; i--) {
+        const year = now.getFullYear() - i;
+        const dateStr = String(year);
+        yearlyMap[dateStr] = { date: dateStr, revenue: 0, tax: 0, count: 0 };
+      }
+
+      invoices.forEach((inv) => {
+        const invDate = new Date(inv.invoiceDate);
+        const dateStr = String(invDate.getFullYear());
+        const entry = yearlyMap[dateStr];
+        if (entry) {
+          entry.revenue += Number(inv.netTotal);
+          entry.tax += Number(inv.taxAmount);
+          entry.count += 1;
+        }
+      });
+      salesTrend = Object.values(yearlyMap).sort((a, b) => a.date.localeCompare(b.date));
+    } else {
+      // Default: day
+      const dailyMap: Record<string, { date: string; revenue: number; tax: number; count: number }> = {};
+      for (let i = 29; i >= 0; i--) {
+        const d = new Date();
+        d.setDate(d.getDate() - i);
+        const dateStr = d.toISOString().split("T")[0] || "";
+        dailyMap[dateStr] = { date: dateStr, revenue: 0, tax: 0, count: 0 };
+      }
+
+      invoices.forEach((inv) => {
+        const dateStr = new Date(inv.invoiceDate).toISOString().split("T")[0] || "";
+        const entry = dailyMap[dateStr];
+        if (entry) {
+          entry.revenue += Number(inv.netTotal);
+          entry.tax += Number(inv.taxAmount);
+          entry.count += 1;
+        }
+      });
+      salesTrend = Object.values(dailyMap).sort((a, b) => a.date.localeCompare(b.date));
+    }
+
+    // Top Customers by revenue
+    const customerMap: Record<string, { id: string; name: string; mobile: string; revenue: number; count: number }> = {};
+    invoices.forEach((inv) => {
+      const cId = inv.customerId || "anonymous";
+      if (!customerMap[cId]) {
+        customerMap[cId] = {
+          id: cId,
+          name: inv.customerName,
+          mobile: inv.customerMobile || "N/A",
+          revenue: 0,
+          count: 0,
+        };
+      }
+      customerMap[cId].revenue += Number(inv.netTotal);
+      customerMap[cId].count += 1;
+    });
+
+    const topCustomers = Object.values(customerMap)
+      .sort((a, b) => b.revenue - a.revenue)
+      .slice(0, 5);
+
+    // Customer Locations breakdown (state and city)
+    const stateMap: Record<string, number> = {};
+    const cityMap: Record<string, number> = {};
+
+    invoices.forEach((inv) => {
+      const state = inv.state || "Unknown State";
+      const city = inv.city || "Unknown City";
+      stateMap[state] = (stateMap[state] || 0) + 1;
+      cityMap[city] = (cityMap[city] || 0) + 1;
+    });
+
+    res.json({
+      summary: {
+        totalRevenue,
+        totalTaxable,
+        totalTax,
+        totalInvoices,
+        averageOrderValue,
+      },
+      salesTrend,
+      topCustomers,
+      locations: {
+        states: Object.entries(stateMap).map(([name, value]) => ({ name, value })),
+        cities: Object.entries(cityMap).map(([name, value]) => ({ name, value })),
+      },
+    });
+  } catch (error) {
+    console.error("Error generating sales analytics:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+// GET endpoint for stock/inventory analytics
+app.get("/api/analytics/stock", async (req, res) => {
+  try {
+    const products = await prisma.product.findMany();
+    const invoiceItems = await prisma.invoiceItem.findMany();
+
+    let totalStockValue = 0;
+    let totalItemsCount = 0;
+    let outOfStockCount = 0;
+    const lowStockThreshold = 10;
+    const lowStockProducts: any[] = [];
+
+    products.forEach((prod) => {
+      const stockVal = Number(prod.stock);
+      const priceVal = Number(prod.price);
+      totalStockValue += stockVal * priceVal;
+      totalItemsCount += stockVal;
+
+      if (stockVal <= 0) {
+        outOfStockCount += 1;
+      }
+      if (stockVal < lowStockThreshold) {
+        lowStockProducts.push({
+          id: prod.id,
+          name: prod.name,
+          stock: stockVal,
+          price: priceVal,
+          category: prod.category,
+        });
+      }
+    });
+
+    // Stock by category
+    const categoryMap: Record<string, { category: string; value: number; count: number; itemsCount: number }> = {};
+    products.forEach((prod) => {
+      const cat = prod.category || "Uncategorized";
+      const stockVal = Number(prod.stock);
+      const priceVal = Number(prod.price);
+
+      if (!categoryMap[cat]) {
+        categoryMap[cat] = { category: cat, value: 0, count: 0, itemsCount: 0 };
+      }
+      categoryMap[cat].value += stockVal * priceVal;
+      categoryMap[cat].count += 1; // unique products in this category
+      categoryMap[cat].itemsCount += stockVal; // total items in this category
+    });
+
+    // Top selling products (by aggregate quantity sold)
+    const productSalesMap: Record<string, { id: string; name: string; quantitySold: number; revenue: number }> = {};
+    invoiceItems.forEach((item) => {
+      const pId = item.productId || "custom-item";
+      if (!productSalesMap[pId]) {
+        productSalesMap[pId] = {
+          id: pId,
+          name: item.name,
+          quantitySold: 0,
+          revenue: 0,
+        };
+      }
+      productSalesMap[pId].quantitySold += Number(item.quantity);
+      productSalesMap[pId].revenue += Number(item.net);
+    });
+
+    const topProducts = Object.values(productSalesMap)
+      .sort((a, b) => b.quantitySold - a.quantitySold)
+      .slice(0, 5);
+
+    res.json({
+      summary: {
+        totalProducts: products.length,
+        totalStockValue,
+        totalItemsCount,
+        outOfStockCount,
+        lowStockCount: lowStockProducts.length,
+      },
+      lowStockProducts: lowStockProducts.sort((a, b) => a.stock - b.stock),
+      categoryDistribution: Object.values(categoryMap),
+      topProducts,
+    });
+  } catch (error) {
+    console.error("Error generating stock analytics:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);

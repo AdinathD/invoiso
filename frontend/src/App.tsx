@@ -3,6 +3,7 @@ import { HashRouter as Router, Routes, Route } from 'react-router-dom';
 import InvoicePage from './invoice/InvoicePage';
 import WholesalePOSPage from './pos/WholesalePOSPage';
 import InvoicesListPage from './invoice/InvoicesListPage';
+import AnalyticsDashboardPage from './AnalyticsDashboardPage';
 import type { MasterForm } from './sidebar';
 
 const INITIAL_FORM: MasterForm = {
@@ -67,6 +68,15 @@ export default function App() {
           path="/invoices"
           element={
             <InvoicesListPage
+              darkMode={darkMode}
+              toggleDarkMode={toggleDarkMode}
+            />
+          }
+        />
+        <Route
+          path="/analytics"
+          element={
+            <AnalyticsDashboardPage
               darkMode={darkMode}
               toggleDarkMode={toggleDarkMode}
             />

@@ -521,8 +521,11 @@ export const InvoiceSidebar: React.FC<InvoiceSidebarProps> = ({ form, onChange, 
     if (value.trim().length > 0) {
       try {
         const results = await fetchCustomers(value);
-        setCustomers(results);
-        setShowCustDropdown(results.length > 0);
+        const filtered = results.filter(
+          (cust) => !cust.name.toLowerCase().includes('walkin') && !cust.name.toLowerCase().includes('walk-in')
+        );
+        setCustomers(filtered);
+        setShowCustDropdown(filtered.length > 0);
       } catch (err) {
         console.error("Error fetching customers:", err);
       }

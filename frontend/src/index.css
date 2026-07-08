@@ -230,3 +230,65 @@ td[tabindex="0"]:focus {
 .animate-row-flash {
   animation: row-flash-anim 1000ms ease-out;
 }
+
+/* Default screen styling: hide print portal content on screen */
+#print-root-container {
+  display: none;
+}
+
+/* ==========================================
+   PRINT MEDIA STYLES
+   ========================================== */
+@media print {
+  /* Force exact colors, background fills, and borders to print accurately */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Reset body styles for paper */
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    font-size: 12pt !important;
+  }
+
+  /* Hide absolutely everything on the page except the portal print root */
+  body > * {
+    display: none !important;
+  }
+
+  /* Allow the print-active area to show and expand */
+  body > #print-root-container {
+    display: block !important;
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    z-index: 99999;
+  }
+
+
+
+  /* Thermal roll-specific CSS overrides */
+  .print-thermal-layout {
+    width: 80mm !important;
+    max-width: 80mm !important;
+    font-size: 8pt !important;
+    padding: 2mm !important;
+    line-height: 1.2 !important;
+  }
+
+  /* Page breaks optimization */
+  .page-break-after {
+    page-break-after: always;
+  }
+
+  .avoid-page-break {
+    page-break-inside: avoid;
+  }
+}

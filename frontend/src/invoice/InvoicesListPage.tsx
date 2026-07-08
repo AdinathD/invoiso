@@ -2,6 +2,8 @@ import { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { Calendar, Search, ArrowLeft, RefreshCw, X, Receipt, ShoppingBag, Eye, CreditCard } from 'lucide-react';
 import { fetchInvoices } from '../apiUtils/invoicesApi';
+import { PrintInvoiceModal } from '../print/PrintInvoiceModal';
+
 
 interface InvoicesListPageProps {
   darkMode: boolean;
@@ -53,6 +55,8 @@ export default function InvoicesListPage({ darkMode, toggleDarkMode }: InvoicesL
   const [selectedDate, setSelectedDate] = useState<string>('');
   const [searchQuery, setSearchQuery] = useState('');
   const [activeInvoice, setActiveInvoice] = useState<Invoice | null>(null);
+  const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
+
 
   // Load Invoices
   const loadInvoices = async (dateStr?: string) => {
@@ -140,6 +144,12 @@ export default function InvoicesListPage({ darkMode, toggleDarkMode }: InvoicesL
             className="px-3 py-1.5 bg-border-acc/20 hover:bg-border-acc/35 text-text-acc text-app-xs font-bold rounded border border-border-acc/40 transition-all cursor-pointer flex items-center gap-1.5"
           >
             ➕ New Invoice
+          </Link>
+          <Link
+            to="/analytics"
+            className="px-3 py-1.5 bg-border-acc/20 hover:bg-border-acc/35 text-text-acc text-app-xs font-bold rounded border border-border-acc/40 transition-all cursor-pointer flex items-center gap-1.5"
+          >
+            📊 Analytics
           </Link>
           <button
             className="px-3 py-1.5 rounded text-app-xs font-bold flex items-center gap-1 cursor-pointer transition-all border border-border-sec bg-text-main text-panel-bg hover:opacity-90"
@@ -469,7 +479,13 @@ export default function InvoicesListPage({ darkMode, toggleDarkMode }: InvoicesL
             </div>
 
             {/* Modal Footer */}
-            <div className="px-5 py-3 border-t border-border-sec bg-app-bg/30 text-right">
+            <div className="px-5 py-3 border-t border-border-sec bg-app-bg/30 flex justify-end gap-3 text-right">
+              <button
+                onClick={() => setIsPrintModalOpen(true)}
+                className="px-4 py-1.5 bg-border-acc hover:bg-action-hover text-white font-extrabold rounded text-app-xs transition-opacity cursor-pointer flex items-center gap-1.5"
+              >
+                🖨️ Print Invoice
+              </button>
               <button
                 onClick={() => setActiveInvoice(null)}
                 className="px-4 py-1.5 bg-text-main text-panel-bg font-extrabold rounded text-app-xs transition-opacity hover:opacity-90 cursor-pointer"
@@ -480,6 +496,60 @@ export default function InvoicesListPage({ darkMode, toggleDarkMode }: InvoicesL
           </div>
         </div>
       )}
+
+      {isPrintModalOpen && activeInvoice && (
+        <PrintInvoiceModal
+          isOpen={isPrintModalOpen}
+          onClose={() => setIsPrintModalOpen(false)}
+          form={{
+            name: activeInvoice.customerName || '',
+            mobileNo: activeInvoice.customerMobile || '',
+            remarks: activeInvoice.remarks || '',
+            invoiceNo: activeInvoice.invoiceNo,
+            invoiceDate: activeInvoice.invoiceDate ? new Date(activeInvoice.invoiceDate).toISOString().split('T')[0] : '',
+            balance: activeInvoice.balance || '',
+            pan: activeInvoice.pan || '',
+            gst: activeInvoice.gstin || '',
+            gstType: activeInvoice.gstType || 'CGST/SGST',
+            city: activeInvoice.city || '',
+            state: activeInvoice.state || '',
+            country: activeInvoice.country || '',
+            billTo: activeInvoice.billTo || '',
+            customerId: ''
+          }}
+          items={activeInvoice.items.map(item => ({
+            srNo: item.srNo,
+            id: item.id,
+            name: item.name,
+            hsn: item.hsn,
+            quantity: Number(item.quantity),
+            uom: item.uom,
+            price: Number(item.price),
+            netWt: Number(item.netWt || 0),
+            rate: Number(item.rate),
+            netRate: Number(item.netRate || item.rate),
+            gstPercent: Number(item.gstPercent),
+            net: Number(item.net)
+          }))}
+          totals={{
+            itemsCount: activeInvoice.items?.length || 0,
+            weightSum: activeInvoice.items?.reduce((sum, item) => sum + Number(item.netWt || 0), 0).toFixed(2),
+            quantitySum: activeInvoice.items?.reduce((sum, item) => sum + Number(item.quantity || 0), 0).toFixed(2),
+            taxableAmount: Number(activeInvoice.taxableAmount || 0).toFixed(2),
+            taxAmount: Number(activeInvoice.taxAmount || 0).toFixed(2),
+            netTotal: Number(activeInvoice.netTotal || 0).toFixed(2)
+          }}
+          hamali={String(activeInvoice.hamali || '0.00')}
+          freight={String(activeInvoice.freight || '0.00')}
+          discPercent="0.00"
+          salesman="-- Select --"
+          vehicleNo=""
+          transport=""
+          roundOff="0.00"
+          note={activeInvoice.remarks || ''}
+        />
+      )}
     </div>
   );
 }
+

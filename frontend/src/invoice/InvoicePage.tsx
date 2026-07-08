@@ -10,6 +10,7 @@ import type { Product, TableItem, ColumnConfig } from './types';
 import { fetchProducts } from '../apiUtils/productsApi';
 import { AddProductModal } from '../AddProductModal';
 import { createInvoice, fetchNextInvoiceNumber } from '../apiUtils/invoicesApi';
+import { PrintInvoiceModal } from '../print/PrintInvoiceModal';
 
 interface InvoicePageProps {
   form: MasterForm;
@@ -22,6 +23,44 @@ export default function InvoicePage({ form, setForm, darkMode, toggleDarkMode }:
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [products, setProducts] = useState<Product[]>([]);
   const [isAddProductModalOpen, setIsAddProductModalOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setMenuOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  // Printing states
+  const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
+  const [printSnapshot, setPrintSnapshot] = useState<{
+    form: MasterForm;
+    items: TableItem[];
+    totals: {
+      itemsCount: number;
+      weightSum: string;
+      quantitySum: string;
+      taxableAmount: string;
+      taxAmount: string;
+      netTotal: string;
+    };
+    hamali: string;
+    freight: string;
+    discPercent: string;
+    salesman: string;
+    vehicleNo: string;
+    transport: string;
+    roundOff: string;
+    note: string;
+  } | null>(null);
+
 
   // Fetch products and next invoice number from backend on mount
   useEffect(() => {
@@ -340,6 +379,22 @@ export default function InvoicePage({ form, setForm, darkMode, toggleDarkMode }:
 
       alert(`Invoice Saved Successfully!\n\nInvoice No: ${form.invoiceNo}\nTotal Items: ${totals.itemsCount}\nNet Total: INR ${totals.netTotal}`);
 
+      // Save a snapshot of the current state for printing before resetting
+      setPrintSnapshot({
+        form: { ...form },
+        items: [...items],
+        totals: { ...totals },
+        hamali,
+        freight,
+        discPercent,
+        salesman,
+        vehicleNo,
+        transport,
+        roundOff,
+        note,
+      });
+      setIsPrintModalOpen(true);
+
       // Clear the items grid on success
       setItems([]);
 
@@ -359,6 +414,7 @@ export default function InvoicePage({ form, setForm, darkMode, toggleDarkMode }:
       alert(`Failed to save invoice: ${error.message || error}`);
     }
   };
+
 
   return (
     <div className="flex w-full min-h-screen transition-colors duration-150 bg-app-bg text-text-main">
@@ -391,24 +447,48 @@ export default function InvoicePage({ form, setForm, darkMode, toggleDarkMode }:
           <div className="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto">
             <span className="text-app-sm text-text-mute hidden sm:inline">Wholesale Credit Terminal</span>
             <div className="flex items-center gap-2 ml-auto sm:ml-0">
-              <Link
-                to="/pos"
-                className="px-2 py-1 bg-border-acc/20 hover:bg-border-acc/35 text-text-acc text-app-xs font-extrabold rounded border border-border-acc/40 transition-all cursor-pointer"
-              >
-                🖥️ Switch to Wholesale POS
-              </Link>
-              <Link
-                to="/invoices"
-                className="px-2 py-1 bg-border-acc/20 hover:bg-border-acc/35 text-text-acc text-app-xs font-extrabold rounded border border-border-acc/40 transition-all cursor-pointer flex items-center gap-1"
-              >
-                📄 View Invoices
-              </Link>
-              <button
-                className="px-2 py-1 bg-text-acc/10 hover:bg-text-acc/25 text-text-acc text-app-xs font-extrabold rounded border border-text-acc/40 transition-all cursor-pointer"
-                onClick={() => setIsAddProductModalOpen(true)}
-              >
-                ➕ Add Product
-              </button>
+              <div className="relative inline-block text-left" ref={menuRef}>
+                <button
+                  onClick={() => setMenuOpen(!menuOpen)}
+                  className="px-2 py-1 bg-border-acc/20 hover:bg-border-acc/35 text-text-acc text-app-xs font-extrabold rounded border border-border-acc/40 transition-all cursor-pointer flex items-center gap-1.5"
+                >
+                  ⚙️ Quick Actions
+                </button>
+                {menuOpen && (
+                  <div className="absolute right-0 mt-1 w-52 bg-panel-bg border border-border-sec rounded-md shadow-lg z-[200] overflow-hidden flex flex-col py-1 text-app-xs">
+                    <Link
+                      to="/pos"
+                      onClick={() => setMenuOpen(false)}
+                      className="px-3 py-2 text-text-main hover:bg-border-sec/50 transition-colors flex items-center gap-2 font-semibold"
+                    >
+                      <span>🖥️</span> Switch to Wholesale POS
+                    </Link>
+                    <Link
+                      to="/invoices"
+                      onClick={() => setMenuOpen(false)}
+                      className="px-3 py-2 text-text-main hover:bg-border-sec/50 transition-colors flex items-center gap-2 font-semibold"
+                    >
+                      <span>📄</span> View Invoices
+                    </Link>
+                    <Link
+                      to="/analytics"
+                      onClick={() => setMenuOpen(false)}
+                      className="px-3 py-2 text-text-main hover:bg-border-sec/50 transition-colors flex items-center gap-2 font-semibold"
+                    >
+                      <span>📊</span> Analytics
+                    </Link>
+                    <button
+                      onClick={() => {
+                        setIsAddProductModalOpen(true);
+                        setMenuOpen(false);
+                      }}
+                      className="px-3 py-2 text-left text-text-main hover:bg-border-sec/50 transition-colors flex items-center gap-2 font-semibold w-full cursor-pointer"
+                    >
+                      <span>➕</span> Add Product
+                    </button>
+                  </div>
+                )}
+              </div>
               <button
                 className="px-2 py-0.5 rounded text-app-base font-semibold flex items-center gap-1 cursor-pointer transition-all border border-border-sec bg-text-main text-panel-bg"
                 onClick={toggleDarkMode}
@@ -621,6 +701,28 @@ export default function InvoicePage({ form, setForm, darkMode, toggleDarkMode }:
         onClose={() => setIsAddProductModalOpen(false)}
         onProductAdded={(newProduct) => setProducts(prev => [...prev, newProduct as Product])}
       />
+
+      {isPrintModalOpen && printSnapshot && (
+        <PrintInvoiceModal
+          isOpen={isPrintModalOpen}
+          onClose={() => {
+            setIsPrintModalOpen(false);
+            setPrintSnapshot(null);
+          }}
+          form={printSnapshot.form}
+          items={printSnapshot.items}
+          totals={printSnapshot.totals}
+          hamali={printSnapshot.hamali}
+          freight={printSnapshot.freight}
+          discPercent={printSnapshot.discPercent}
+          salesman={printSnapshot.salesman}
+          vehicleNo={printSnapshot.vehicleNo}
+          transport={printSnapshot.transport}
+          roundOff={printSnapshot.roundOff}
+          note={printSnapshot.note}
+        />
+      )}
     </div>
   );
 }
+
