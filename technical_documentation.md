@@ -172,39 +172,28 @@ erDiagram
 ## 4. End-to-End Request/Data Flows
 
 ### A. Invoice Creation & Customer Sync Flow
-When a user finishes an invoice (Traditional page or POS page) and clicks "Save":
+When an invoice is saved, the frontend sends a POST request with the form data and selected items. The backend handles the creation and sync inside a single database transaction:
 
 ```mermaid
 sequenceDiagram
-    participant UI as React Frontend
-    participant API as Express API (/api/invoices)
-    participant TX as Prisma Database Transaction
-    participant DB as PostgreSQL
+    participant Frontend
+    participant Backend (Express)
+    participant Database (PostgreSQL)
 
-    UI->>API: POST /api/invoices (masterForm, items, totals, logistics)
-    Note over API: Start DB Transaction
-    API->>TX: 1. Check or Upsert Customer (customerId present?)
-    alt Has Customer ID
-        TX->>DB: UPDATE Customer info (balance, mobile, GSTIN, etc.)
-    else No Customer ID
-        TX->>DB: CREATE Customer record
+    Frontend->>Backend: POST /api/invoices (Invoice details & items)
+    Note over Backend: Run database transaction:
+    alt Customer exists (has customerId)
+        Backend->>Database: Update Customer details (address, mobile, GSTIN, etc.)
+    else New Customer
+        Backend->>Database: Create new Customer record
     end
-    DB-->>TX: Return Customer ID
-    
-    API->>TX: 2. Insert Invoice Metadata Snapshot
-    TX->>DB: INSERT INTO "Invoice" (invoiceNo, customerName, totalRevenue, etc.)
-    DB-->>TX: Return Invoice ID
-    
-    API->>TX: 3. Insert Invoice Items
-    TX->>DB: INSERT INTO "InvoiceItem" (invoiceId, productId, name, rate, net, etc.)
-    
-    Note over API: Commit DB Transaction
-    TX-->>API: Success
-    API-->>UI: 201 Created (Invoice Metadata)
+    Backend->>Database: Insert Invoice (mapped to Customer ID)
+    Backend->>Database: Insert Invoice Items (mapped to Invoice ID)
+    Backend-->>Frontend: Return 201 Created (Invoice object)
 ```
 
-> [!WARNING]
-> **Stock Updates**: In the current implementation, creating or submitting an invoice does **not** update or decrement the product stock count in the database. Product stock counts are only mutated when manually creating products.
+
+> **Stock Levels**: Creating an invoice does **not** update or decrement the product stock count in the database. Stock counts are only updated during manual product entry.
 
 ### B. POS Terminal Flow
 1. **Catalog Retrieval**: POS requests `/api/products` on mount and stores items locally.
@@ -302,30 +291,75 @@ Exposed in `backend/.env`:
 
 ## 9. Production Build & Deployment
 
+### Deployment Prerequisites & Infrastructure Requirements
+
+To deploy the **Invoiso.ai** application, the production environment requires:
+1. **Node.js Runtime**: Node.js `v18.x` or higher and `npm` package manager.
+2. **Database System**: A PostgreSQL database (hosted locally or via a cloud database service like AWS RDS, Neon, or Supabase).
+3. **Web Server / Reverse Proxy**: `Nginx` or `Apache` to act as a reverse proxy for the backend API and serve the static frontend client.
+4. **Process Manager**: `PM2` or a Systemd service to run the Express backend server continuously in the background and automatically restart it on failures.
+
+---
+
+### Production Environment Variables
+
+#### Backend Configuration (`backend/.env`)
+* `PORT`: The port the Express application listens on (default is `5000`).
+* `DATABASE_URL`: Connection pool URL to the production PostgreSQL database.
+* `CORS_ORIGIN`: Allowed origins (e.g. `http://yourdomain.com`).
+
+#### Frontend Configuration
+* The base api URL is configured in `frontend/src/apiUtils/` files. Ensure the host address `http://localhost:5000` is changed to the production domain API URL (e.g., `https://api.yourdomain.com`) during the build process.
+
+---
+
 ### Build Commands
-1. **Prisma Client Generation**:
-   Navigate to `backend` and run:
+
+1. **Backend Build Process**:
+   Navigate to the `backend` directory:
    ```bash
+   # Install dependencies
+   npm install
+   
+   # Generate Prisma client artifacts
    npx prisma generate
-   ```
-2. **Backend Compilation**:
-   ```bash
-   npm run build
-   ```
-3. **Frontend Compilation**:
-   ```bash
+   
+   # Compile TypeScript files into build (dist/) directory
    npm run build
    ```
 
-### Prisma Migrations
-If changes are made to `schema.prisma`, deploy migrations to the target database:
-```bash
-npx prisma migrate dev --name <migration-name>
-```
-To run pending migrations on production:
-```bash
-npx prisma migrate deploy
-```
+2. **Frontend Build Process**:
+   Navigate to the `frontend` directory:
+   ```bash
+   # Install dependencies
+   npm install
+   
+   # Build optimized static assets (HTML, CSS, JS) into dist/ folder
+   npm run build
+   ```
+
+---
+
+### Database Setup & Migrations
+
+To apply database tables, indexes, and constraints to the target database:
+1. Run migrations in your development environment to generate migration files:
+   ```bash
+   npx prisma migrate dev --name init
+   ```
+2. Apply pending migration scripts on the production database:
+   ```bash
+   npx prisma migrate deploy
+   ```
+
+---
+
+### Process Execution & Serving
+
+1. **Running the Backend (with PM2)**:
+   ```bash
+   pm2 start dist/index.js --name "invoiso-backend"
+   ```
 
 ---
 
