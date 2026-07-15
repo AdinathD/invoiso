@@ -236,6 +236,8 @@ WholesalePOSPage (State: cart, products, search, activeIndex, discountPercent, a
 ├── POSProductGrid (Props: products, addToCart)
 │   └── POSProductCard (Props: product, onSelect)
 └── POSCartSummary (Props: cart, totals, discountPercent, updateQuantity, handleCheckout)
+```
+
 ### C. Detailed Frontend File-by-File Breakdown
 
 #### 1. Core Routing & App Shell
