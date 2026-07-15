@@ -22,7 +22,7 @@ Check if the backend server is running correctly.
 * **URL:** `/`
 * **Method:** `GET`
 * **Response:**
-  * **200 OK**: `"Backend running"`
+  * **200 OK**: `Backend running` (Plain Text)
 
 ---
 
@@ -105,6 +105,7 @@ Retrieves a list of all invoices. Supports optional datewise filtering.
 ### 3. Create Invoice
 Creates a new invoice and its associated invoice items inside a database transaction.
 * **Customer Sync Behavior**: If a valid `customerId` is provided, the database updates that customer's parameters (e.g., `balance`, `mobileNo`, `gstin`). Otherwise, it auto-creates a new Customer record.
+* **Calculation Policy**: The backend stores values exactly as transmitted. All taxes, rates, and totals MUST be calculated and supplied by the client (frontend).
 
 * **URL:** `/api/invoices`
 * **Method:** `POST`

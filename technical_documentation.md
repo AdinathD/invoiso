@@ -4,6 +4,20 @@ This document serves as a complete developer reference guide for the **Invoiso.a
 
 ---
 
+## Table of Contents
+1. [System Architecture Overview](#1-system-architecture-overview)
+2. [Project Structure](#2-project-structure)
+3. [Database Schema & Relational Models](#3-database-schema--relational-models)
+4. [End-to-End Request/Data Flows](#4-end-to-end-requestdata-flows)
+5. [Component Hierarchy](#5-component-hierarchy)
+6. [Detailed Business Logic & Rules](#6-detailed-business-logic--rules)
+7. [Environment Configuration](#7-environment-configuration)
+8. [Error & Transaction Handling](#8-error--transaction-handling)
+9. [Production Build & Deployment](#9-production-build--deployment)
+10. [API Documentation Reference](#10-api-documentation-reference)
+
+---
+
 ## 1. System Architecture Overview
 
 Invoiso.ai is structured as a decoupled Client-Server application:
@@ -222,14 +236,79 @@ WholesalePOSPage (State: cart, products, search, activeIndex, discountPercent, a
 ├── POSProductGrid (Props: products, addToCart)
 │   └── POSProductCard (Props: product, onSelect)
 └── POSCartSummary (Props: cart, totals, discountPercent, updateQuantity, handleCheckout)
-```
+### C. Detailed Frontend File-by-File Breakdown
+
+#### 1. Core Routing & App Shell
+* [App.tsx](file:///c:/Adinath/invoiso-demoui/my-app/frontend/src/App.tsx)
+  * **Role**: Root entry file configuring the client-side router (`react-router-dom`).
+  * **Functionality**: Maps pages to URLs: `/` to `InvoicePage`, `/invoices` to `InvoicesListPage`, `/pos` to `WholesalePOSPage`, and `/analytics` to `AnalyticsDashboardPage`. Manages global dark-mode state shared across layouts.
+* [sidebar.tsx](file:///c:/Adinath/invoiso-demoui/my-app/frontend/src/sidebar.tsx)
+  * **Role**: Primary layout shell wrapping every main page view.
+  * **Functionality**: Renders the collapsible side navigation panel, branding logo, page tabs, and keyboard shortcut indicators. Focuses heavily on navigation shortcuts (e.g. `Ctrl+B` toggle).
+
+#### 2. Traditional Invoicing Page & Components
+* [InvoicePage.tsx](file:///c:/Adinath/invoiso-demoui/my-app/frontend/src/invoice/InvoicePage.tsx)
+  * **Role**: Traditional itemized invoice ledger workspace.
+  * **Key State**: `form` (customer metadata details), `items` (cart items), `products` (autocomplete dropdown cache), `selectedProduct`, and logistics states (`hamali`, `freight`, `discPercent`, `roundOff`).
+  * **Functionality**: Manages autocomplete product searching, item rows appending, and handles invoice transactions inside validation frameworks. Employs shortcut listeners (e.g. `Alt+E` to erase, `Alt+C` to clear, `Ctrl+G` to view summaries).
+* [ProductListTable.tsx](file:///c:/Adinath/invoiso-demoui/my-app/frontend/src/invoice/ProductListTable.tsx)
+  * **Role**: Grid rendering invoice item lines.
+  * **Functionality**: Supports inline cell modifications (quantity, rate, UOM, weight) with auto-saving. Manages the dynamic column-visibility grid configuration stored in `localStorage`.
+* [AddProductForm.tsx](file:///c:/Adinath/invoiso-demoui/my-app/frontend/src/invoice/AddProductForm.tsx)
+  * **Role**: In-page new product fast insertion drawer.
+  * **Functionality**: Validates and submits new catalog items to `POST /api/products` directly from the billing row, auto-selecting it once added.
+* [SummaryFooter.tsx](file:///c:/Adinath/invoiso-demoui/my-app/frontend/src/invoice/SummaryFooter.tsx)
+  * **Role**: Sticky calculations summary card.
+  * **Functionality**: Renders computed sums, logistics inputs (Hamali charges, freight, discount percentages), and round-offs. Hooks the `handleSaveInvoice` callback.
+* [types.ts](file:///c:/Adinath/invoiso-demoui/my-app/frontend/src/invoice/types.ts)
+  * **Role**: Shared interface typing definitions for invoices, invoice items, and customer configurations.
+
+#### 3. Wholesale POS Terminal Components
+* [WholesalePOSPage.tsx](file:///c:/Adinath/invoiso-demoui/my-app/frontend/src/pos/WholesalePOSPage.tsx)
+  * **Role**: Fast-paced cashier retail counter panel.
+  * **Key State**: `cart` (POS items), `products` (directory), `search` (filter input), and `activeIndex` (grid arrow focus index).
+  * **Functionality**: Fully handles hands-on-keyboard operations. Captures arrow keys to navigate product cards, `Enter` to append quantities, `Tab` / `Shift+Tab` to shift between search inputs, grids, and checkout buttons.
+* [POSProductGrid.tsx](file:///c:/Adinath/invoiso-demoui/my-app/frontend/src/pos/POSProductGrid.tsx)
+  * **Role**: Grid mapping searchable store products.
+  * **Functionality**: Receives search strings, handles arrow key navigation updates, and renders card slots.
+* [POSProductCard.tsx](file:///c:/Adinath/invoiso-demoui/my-app/frontend/src/pos/POSProductCard.tsx)
+  * **Role**: Visual slot for individual catalog items.
+  * **Functionality**: Displays the unit price, stock levels, GST tax percentage, and handles selection highlights.
+* [POSCartSummary.tsx](file:///c:/Adinath/invoiso-demoui/my-app/frontend/src/pos/POSCartSummary.tsx)
+  * **Role**: High-visibility sidebar cart tallying sums.
+  * **Functionality**: Details quantities, computed net weights, base/gst taxable totals, and triggers checkouts.
+
+#### 4. HTML/PDF Print Templates Engine
+* [PrintInvoiceModal.tsx](file:///c:/Adinath/invoiso-demoui/my-app/frontend/src/print/PrintInvoiceModal.tsx)
+  * **Role**: Document printer preview panel.
+  * **Functionality**: Triggers `window.print()` using CSS `@media print` print setups. Toggles layout options.
+* [PrintTemplates.tsx](file:///c:/Adinath/invoiso-demoui/my-app/frontend/src/print/PrintTemplates.tsx)
+  * **Role**: Structural templates mapper.
+  * **Functionality**: Renders paper formats: Classic (traditional A4), Thermal (3-inch roll receipt format), and Ledger (detailed item columns).
+* [PrintSections.tsx](file:///c:/Adinath/invoiso-demoui/my-app/frontend/src/print/PrintSections.tsx)
+  * **Role**: Modular components (Header, Customer details, totals, terms).
+
+#### 5. Interactive Analytics Dashboard
+* [AnalyticsDashboardPage.tsx](file:///c:/Adinath/invoiso-demoui/my-app/frontend/src/AnalyticsDashboardPage.tsx)
+  * **Role**: Interactive chart portal.
+  * **Key State**: `salesTimeframe` (`day` | `month` | `year`), `salesData`, `stockData`, and chart hover indexes.
+  * **Functionality**: Runs API fetches dynamically, renders clean SVG line trends with area gradient fills, stock allocation donut charts, and top products ledger tables.
+
+#### 6. Core Global Utilities
+* [keyboardUtils.ts](file:///c:/Adinath/invoiso-demoui/my-app/frontend/src/keyboardUtils.ts)
+  * **Role**: Focus navigation helper.
+  * **Functionality**: Renders `handleEnterTraversal` to capture `Enter` key presses inside input elements and traverse focus to adjacent elements based on `data-index` attributes.
 
 ---
 
 ## 6. Detailed Business Logic & Rules
 
-### A. Tax & Price Calculation Rules
-Prices stored in the database represent the **Unit Price including GST**. The backend and frontend calculate the base taxable rates back from this value:
+### A. Calculation Origin & Pipeline
+> [!IMPORTANT]
+> **Frontend-Driven Calculations**: The backend Express API does **not** recalculate line item taxes or overall invoice totals during the billing transaction. All calculations (item base rates, taxes, discounts, logistics additions, and rounding adjustments) are computed on the client-side (frontend) and sent to the backend inside the request payload (`items`, `totals`, `hamali`, `freight` fields). The backend inserts these pre-calculated values directly into the database.
+
+### B. Tax & Price Calculation Rules (Frontend)
+Prices stored in the database represent the **Unit Price including GST**. The frontend calculates the base taxable rates back from this value:
 * **Item Base Rate (Excluding Tax)**:
   $$\text{rate} = \frac{\text{Price including GST}}{1 + \frac{\text{GST \%}}{100}}$$
 * **Line Net Value**:
@@ -237,7 +316,7 @@ Prices stored in the database represent the **Unit Price including GST**. The ba
 * **Line Tax amount**:
   $$\text{tax} = \text{Line Net Value} - (\text{rate} \times \text{quantity})$$
 
-### B. Discount & Rounding Calculations
+### C. Discount & Rounding Calculations (Frontend)
 * **Invoice Discount Amount**:
   $$\text{discountAmount} = \text{totalTaxable} \times \frac{\text{Discount \%}}{100}$$
 * **Invoice Total Taxable (Logistics added)**:
@@ -372,7 +451,7 @@ Check if the backend server is running correctly.
 * **URL:** `/`
 * **Method:** `GET`
 * **Response:**
-  * **200 OK**: `"Backend running"`
+  * **200 OK**: `Backend running` (Plain Text)
 
 ### Products API
 1. **Get All Products**: Retrieves a list of all products in the database.
@@ -416,7 +495,7 @@ Check if the backend server is running correctly.
    * **Response:**
      * **200 OK**: Array of invoices including nested items and customer data.
 
-3. **Create Invoice**: Creates a new invoice and its associated invoice items inside a database transaction.
+3. **Create Invoice**: Creates a new invoice and its associated invoice items inside a database transaction. The backend stores values exactly as transmitted. All taxes, rates, and totals MUST be calculated and supplied by the client (frontend).
    * **URL:** `/api/invoices`
    * **Method:** `POST`
    * **Response:**
